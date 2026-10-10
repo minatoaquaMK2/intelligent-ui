@@ -92,7 +92,7 @@ export function RackView({ props, onSelect }: SelectionProps) {
   }
   gap(cursor, 1);
   return (
-    <section className="rack-view" role="group" aria-label={`${text(props.label)} 机架设备图`}>
+    <div className="rack-view" role="group" aria-label={`${text(props.label)} 机架设备图`}>
       <div className="monitor-heading">
         <span>
           <Server size={16} />
@@ -119,7 +119,7 @@ export function RackView({ props, onSelect }: SelectionProps) {
       </div>
       {!devices.length && <p className="monitor-empty">没有匹配的设备，请调整筛选条件。</p>}
       <p className="monitor-footnote">点击设备查看指标 · U 位按顺序展示，间距为示意</p>
-    </section>
+    </div>
   );
 }
 
@@ -134,7 +134,7 @@ export function DeviceDetail({ props }: { props: Data }) {
       </div>
     );
   return (
-    <section className="device-detail" role="group" aria-label="所选设备详情">
+    <div className="device-detail" role="group" aria-label="所选设备详情">
       <div className="monitor-heading">
         <span>
           <DeviceIcon category={device.category} />
@@ -188,7 +188,7 @@ export function DeviceDetail({ props }: { props: Data }) {
           {number(device.power)} W
         </span>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -386,7 +386,7 @@ export function GpuGrid({ props, onSelect }: SelectionProps) {
 export function PortGrid({ props, onSelect }: SelectionProps) {
   const ports = records(props.ports).slice(0, 64);
   return (
-    <section className="port-panel" role="group" aria-label="交换机端口面板">
+    <div className="port-panel" role="group" aria-label="交换机端口面板">
       <div className="monitor-heading">
         <span>
           <Network size={17} />
@@ -421,14 +421,14 @@ export function PortGrid({ props, onSelect }: SelectionProps) {
         <Badge value="idle" />
       </div>
       <p className="monitor-footnote">1–44 · 25 Gbps / 45–48 · 100 Gbps 上联 · 演示配置</p>
-    </section>
+    </div>
   );
 }
 
 export function AlertList({ props }: { props: Data }) {
   const items = records(props.items).slice(0, 64);
   return (
-    <section className="monitor-alerts" role="group" aria-label="活动告警列表">
+    <div className="monitor-alerts" role="group" aria-label="活动告警列表">
       <div className="monitor-heading">
         <span>
           <AlertTriangle size={16} />
@@ -457,6 +457,6 @@ export function AlertList({ props }: { props: Data }) {
           </article>
         ))
       )}
-    </section>
+    </div>
   );
 }
