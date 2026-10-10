@@ -14,11 +14,16 @@ import {
   Layers3,
   Maximize2,
   Menu,
+  Pause,
+  Play,
   X,
 } from 'lucide-react';
 import { MechanismLab } from './MechanismLab';
 import { COMPONENT_COUNT, getLessons, getStages, REPO, sourceLink } from './lessons';
 import { I18nProvider, useI18n } from '../i18n';
+import type { StageId } from '../i18n/types';
+import { ArchitectureDiagram } from './ArchitectureDiagram';
+import { formatChapterNumber, lessonArchitecture } from './architecture';
 import '../styles.css';
 
 function Brand() {
@@ -37,176 +42,6 @@ function Brand() {
   );
 }
 
-function ArchitectureDiagram({
-  selected,
-  onSelect,
-  flat,
-  stages,
-}: {
-  selected: number;
-  onSelect: (n: number) => void;
-  flat: boolean;
-  stages: ReturnType<typeof getStages>;
-}) {
-  const { t } = useI18n();
-  const positions = [
-    [32, 73],
-    [268, 73],
-    [504, 73],
-    [740, 73],
-    [280, 253],
-  ];
-  return (
-    <svg
-      className="s-architecture-svg"
-      viewBox="0 0 976 366"
-      role="group"
-      aria-label={t.diagram.ariaLabel}
-    >
-      <defs>
-        <pattern id="diagram-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="0.8" fill="#c9d2c8" />
-        </pattern>
-        <marker
-          id="arrow-forward"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto-start-reverse"
-        >
-          <path d="M1 1 9 5 1 9" fill="none" stroke="#789087" strokeWidth="1.7" />
-        </marker>
-        <marker
-          id="arrow-back"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto-start-reverse"
-        >
-          <path d="M1 1 9 5 1 9" fill="none" stroke="#b7805e" strokeWidth="1.7" />
-        </marker>
-      </defs>
-      <rect width="976" height="366" fill="url(#diagram-dots)" />
-      <g fill="none" stroke="#789087" strokeWidth="1.6" markerEnd="url(#arrow-forward)">
-        {[0, 1, 2].map((n) => (
-          <path
-            key={n}
-            d={`M ${positions[n][0] + (flat ? 180 : 204)} 126 H ${positions[n + 1][0] - 9}`}
-          />
-        ))}
-        <path d="M 485 292 H 589 V 201" strokeDasharray="5 5" />
-      </g>
-      <path
-        d="M 828 196 V 224 H 595 V 196"
-        fill="none"
-        stroke="#b7805e"
-        strokeWidth="1.5"
-        strokeDasharray="4 5"
-        markerEnd="url(#arrow-back)"
-      />
-      <g className="s-svg-micro" fill="#6d7d74">
-        <text x="248" y="107" textAnchor="middle">
-          {t.diagram.dsl}
-        </text>
-        <text x="484" y="107" textAnchor="middle">
-          {t.diagram.ir}
-        </text>
-        <text x="720" y="107" textAnchor="middle" fontSize="7">
-          {t.diagram.uiOps}
-        </text>
-        <text x="603" y="291">
-          {t.diagram.dataFeed}
-        </text>
-        <text x="709" y="244" textAnchor="middle" fill="#a37658">
-          {t.diagram.handlerId}
-        </text>
-      </g>
-      {stages.map((stage, n) => {
-        const [x, y] = positions[n];
-        const height = n === 4 ? 68 : 115;
-        const active = n === selected;
-        return (
-          <g
-            key={stage.name}
-            className={`s-diagram-node ${active ? 'is-active' : ''}`}
-            role="button"
-            tabIndex={0}
-            aria-label={`${stage.name}：${stage.role}`}
-            aria-pressed={active}
-            onClick={() => onSelect(n)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                onSelect(n);
-              }
-            }}
-          >
-            {!flat && (
-              <>
-                <path d={`M${x} ${y}l26 -20h180l-26 20Z`} fill={stage.color} stroke="#a8b8ad" />
-                <path
-                  d={`M${x + 180} ${y}l26 -20v${height}l-26 20Z`}
-                  fill={active ? '#85ac99' : '#c7d2c7'}
-                  stroke="#a8b8ad"
-                />
-              </>
-            )}
-            <rect
-              className="s-node-face"
-              x={x}
-              y={y}
-              width="180"
-              height={height}
-              fill={active ? '#294f45' : '#f9faf6'}
-              stroke={active ? '#294f45' : '#9dab9e'}
-              strokeWidth={active ? '2' : '1.2'}
-            />
-            <text
-              x={x + 17}
-              y={y + 29}
-              fill={active ? '#f2f5e9' : '#2d4b41'}
-              fontSize="16"
-              fontWeight="600"
-            >
-              {stage.name}
-            </text>
-            <circle cx={x + 160} cy={y + 25} r="3.1" fill={active ? '#d2ef93' : '#a6b9ac'} />
-            <text
-              className="s-svg-micro"
-              x={x + 17}
-              y={y + 49}
-              fill={active ? '#c1d6c7' : '#78877b'}
-            >
-              {stage.english}
-            </text>
-            {n !== 4 && (
-              <>
-                <line
-                  x1={x + 17}
-                  y1={y + 67}
-                  x2={x + 163}
-                  y2={y + 67}
-                  stroke={active ? '#547368' : '#dbe2d9'}
-                />
-                <text x={x + 17} y={y + 91} fill={active ? '#e2eade' : '#647368'} fontSize="11">
-                  {stage.role}
-                </text>
-              </>
-            )}
-            <text className="s-svg-micro" x={x} y={y - (flat ? 12 : 32)} fill="#557367">
-              0{n + 1} / {n === 4 ? t.diagram.dataLane : t.diagram.execLayer}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
 function ShowcaseContent() {
   const { t, lang, toggleLang } = useI18n();
   const lessons = getLessons(lang);
@@ -218,20 +53,22 @@ function ShowcaseContent() {
       lessons.findIndex((item) => `#${item.id}` === window.location.hash),
     ),
   );
-  const [selected, setSelected] = useState(lessons[chapter]?.node ?? 0);
+  const [selected, setSelected] = useState<StageId>(lessonArchitecture[lessons[chapter].id].focus);
   const [flat, setFlat] = useState(false);
+  const [animated, setAnimated] = useState(true);
   const [menu, setMenu] = useState(false);
   const [demoLoaded, setDemoLoaded] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
 
   const lesson = lessons[chapter] ?? lessons[0];
-  const stage = stages[selected] ?? stages[0];
+  const stage = stages.find((item) => item.id === selected) ?? stages[0];
+  const chapterNumber = formatChapterNumber(chapter);
   const demoUrl = `${import.meta.env.BASE_URL}demo/`;
 
   function choose(index: number, scroll = false) {
     setChapter(index);
-    setSelected(lessons[index].node);
+    setSelected(lessonArchitecture[lessons[index].id].focus);
     history.replaceState(null, '', `#${lessons[index].id}`);
     if (scroll)
       document.getElementById('learn')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -242,7 +79,7 @@ function ShowcaseContent() {
       const index = lessons.findIndex((item) => `#${item.id}` === location.hash);
       if (index >= 0) {
         setChapter(index);
-        setSelected(lessons[index].node);
+        setSelected(lessonArchitecture[lessons[index].id].focus);
       }
     };
     window.addEventListener('hashchange', sync);
@@ -374,7 +211,7 @@ function ShowcaseContent() {
                   aria-current={chapter === index ? 'step' : undefined}
                   onClick={() => choose(index)}
                 >
-                  <span>0{index + 1}</span>
+                  <span>{formatChapterNumber(index)}</span>
                   {item.short}
                   <ChevronRight size={13} />
                 </button>
@@ -407,7 +244,7 @@ function ShowcaseContent() {
             <div className="s-lesson-topline">
               <span>
                 {t.chapters.chapterPrefix}
-                {chapter + 1} <i>/</i> {lesson.eyebrow}
+                {chapterNumber} <i>/</i> {lesson.eyebrow}
               </span>
               <span>{t.chapters.learnByDoing}</span>
             </div>
@@ -426,31 +263,42 @@ function ShowcaseContent() {
                     {t.diagram.legendEvent}
                   </span>
                 </div>
-                <div className="s-segment" aria-label={t.diagram.viewAngle}>
-                  <button aria-pressed={!flat} onClick={() => setFlat(false)}>
-                    {t.diagram.view25D}
+                <div className="s-diagram-controls">
+                  <button className="s-motion-toggle" onClick={() => setAnimated(!animated)}>
+                    {animated ? <Pause size={12} /> : <Play size={12} />}
+                    {animated ? t.diagram.pauseMotion : t.diagram.resumeMotion}
                   </button>
-                  <button aria-pressed={flat} onClick={() => setFlat(true)}>
-                    {t.diagram.viewFlat}
-                  </button>
+                  <div className="s-segment" aria-label={t.diagram.viewAngle}>
+                    <button aria-pressed={!flat} onClick={() => setFlat(false)}>
+                      {t.diagram.view25D}
+                    </button>
+                    <button aria-pressed={flat} onClick={() => setFlat(true)}>
+                      {t.diagram.viewFlat}
+                    </button>
+                  </div>
                 </div>
               </div>
               <ArchitectureDiagram
                 selected={selected}
                 onSelect={setSelected}
                 flat={flat}
+                animated={animated}
                 stages={stages}
+                lesson={lesson}
+                chapterNumber={chapterNumber}
+                labels={t.diagram}
               />
               <div className="s-layer-inspector" aria-live="polite">
-                <div className="s-layer-number">
-                  0{selected + 1}
-                  <span>{stage.english}</span>
+                <div className="s-layer-marker">
+                  <Layers3 size={24} strokeWidth={1.5} aria-hidden="true" />
+                  <span>{t.diagram.moduleLabel}</span>
                 </div>
                 <div className="s-layer-description">
                   <h3>
                     {stage.name}
                     <span>{stage.role}</span>
                   </h3>
+                  <span className="s-inspected-module">{stage.english}</span>
                   <p>{stage.detail}</p>
                   <a href={sourceLink(stage.file)} target="_blank" rel="noreferrer">
                     {stage.file}
@@ -471,7 +319,7 @@ function ShowcaseContent() {
                 {t.chapters.prevChapter}
               </button>
               <span>
-                0{chapter + 1} / 0{lessons.length}
+                {chapterNumber} / {String(lessons.length).padStart(2, '0')}
               </span>
               {chapter < lessons.length - 1 ? (
                 <button onClick={() => choose(chapter + 1, true)}>

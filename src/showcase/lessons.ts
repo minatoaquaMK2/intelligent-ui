@@ -12,7 +12,6 @@ const lessonsZh: LessonTranslation[] = [
     short: '全链路',
     name: '一句话，经过了哪几层？',
     eyebrow: 'FROM WORDS TO INTERFACES',
-    node: 0,
     description:
       '模型输出 DSL 描述界面，编译器整理校验结构，Worker 在沙箱中计算状态与数据，宿主 React 负责最终渲染。先认清分层边界，再深入各层中间产物。',
     takeaway: '模型负责声明结构；运行时负责状态计算；宿主负责安全渲染。',
@@ -25,9 +24,8 @@ const lessonsZh: LessonTranslation[] = [
     short: '本地状态',
     name: '拖动滑块，模型还在工作吗？',
     eyebrow: 'GENERATE ONCE, INTERACT LOCALLY',
-    node: 2,
     description:
-      '控件把处理器 ID 和变更值直接提交给 Worker。Worker 毫秒级更新状态、重算表达式，再将属性差量同步回宿主。整个过程无需发起任何模型调用。',
+      '控件把处理器 ID 和变更值提交给 Worker。Worker 在浏览器内更新状态、重算表达式，再将组件属性的变化同步回宿主。这条本地交互路径无需再次生成源码或调用模型。',
     takeaway: '局部交互完全在浏览器沙箱内闭环，状态按声明名称稳定隔离。',
     experiment: '变更一个状态，观察运行时闭环',
     instruction:
@@ -38,9 +36,8 @@ const lessonsZh: LessonTranslation[] = [
     short: '流式编译',
     name: '代码没写完，界面怎么先出现？',
     eyebrow: 'INCOMPLETE SOURCE, USEFUL UI',
-    node: 1,
     description:
-      '容错编译器对累积文本持续进行增量解析。完整结构进入程序抽象树，正在打字的文本进入常量表，未闭合标签触发容错恢复。有效部分立刻渲染，无需等待完整输出结束。',
+      '每次收到片段，容错编译器都会重新编译当前累计源码，再比较前后产物。结构变化时更新 program，只有文字增长时更新 constants；未完成标签产生恢复诊断，有效部分先显示。流式传输补丁不等于增量解析。',
     takeaway: '流式容错机制保留可用片段，用户无需等待漫长的模型生成结束。',
     experiment: '让源码停在未完成的标签上',
     instruction:
@@ -51,9 +48,8 @@ const lessonsZh: LessonTranslation[] = [
     short: '数据绑定',
     name: '界面的数值一定由模型生成吗？',
     eyebrow: 'STRUCTURE AND DATA, SEPARATELY',
-    node: 4,
     description:
-      'DSL 中通过 data.* 表达式引用业务数据。appData 独立传入运行时，模型无需重复背书海量监控指标，避免幻觉并降低 Token 开销。',
+      'DSL 中通过 data.* 表达式引用数据。appData 独立传入运行时，更新快照时无需改写源码或重新调用模型。数值直接来自数据源，减少让模型转抄数据的错误。',
     takeaway: '同一份 UI 程序可以复用于多份动态数据，结构抽象与数据实体完全解耦。',
     experiment: '切换数据源，程序架构保持不变',
     instruction:
@@ -64,7 +60,6 @@ const lessonsZh: LessonTranslation[] = [
     short: '执行边界',
     name: '为什么不直接执行生成的代码？',
     eyebrow: 'A SMALL LANGUAGE, EXPLICIT RULES',
-    node: 1,
     description:
       '本项目采用严格的组件白名单与安全表达式沙箱。源码编译为 JSON IR，由 Worker 解释受控 AST。任何未注册组件、非法属性或全局对象（window / document）访问均被坚决拦截。',
     takeaway: 'Web Worker 隔离了执行线程，而真正的安全边界来自于受限的语法和白名单。',
@@ -77,13 +72,12 @@ const lessonsZh: LessonTranslation[] = [
     short: '下一轮对话',
     name: '当前选择，如何进入下一轮？',
     eyebrow: 'MAKE CONTEXT EXPLICIT',
-    node: 3,
     description:
-      '交互状态默认留在 Worker 内。若需触发下一轮对话，宿主必须显式将关键状态序列化为受控的 Context 或 issueNewTurn 消息，杜绝隐式状态泄露。',
+      '滑块变化不会自动开始对话。点击按钮后，Worker 根据当前状态生成 issueNewTurn(text)，交给宿主处理。完整 POC 再由宿主提交新消息和经过校验的上下文，生成一条新回复；下方实验只捕获动作，不调用模型。',
     takeaway: '对话上下文由宿主受控显式携带，模型并不直接透传 Worker 的原始内部状态。',
     experiment: '将交互结果封装为下一轮消息',
     instruction:
-      '调整滑块阈值，点击界面中的「带着当前状态继续」。查看下方捕获的 Action 文本与上下文快照。',
+      '调整滑块阈值，点击界面中的「带着当前状态继续」。查看下方捕获的 Action 文本如何带入当前阈值和越限台数；本实验不会发送新请求。',
   },
 ];
 
@@ -93,7 +87,6 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Pipeline',
     name: 'From a single prompt, what layers are involved?',
     eyebrow: 'FROM WORDS TO INTERFACES',
-    node: 0,
     description:
       'The model emits DSL describing the UI, the compiler structures IR, the Worker sandbox evaluates state and data, and React renders the components. Understand the role of each layer before diving into artifacts.',
     takeaway: 'The model declares structure; the runtime computes state; the host renders safely.',
@@ -106,9 +99,8 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Local State',
     name: 'When moving a slider, is the model still running?',
     eyebrow: 'GENERATE ONCE, INTERACT LOCALLY',
-    node: 2,
     description:
-      'The UI control passes a handler ID and updated value directly to the Worker. The Worker updates state, re-evaluates expressions in milliseconds, and pushes prop diffs to the host—without touching the model.',
+      'The UI control sends a handler ID and updated value to the Worker. It updates state, re-evaluates expressions, and returns changed component props locally in the browser. This path neither regenerates source nor calls the model.',
     takeaway:
       'Local interactions close the loop inside the browser sandbox; state persists under stable identifiers.',
     experiment: 'Change a State Variable & Observe the Local Loop',
@@ -120,9 +112,8 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Streaming',
     name: 'How does the UI render before code finishes writing?',
     eyebrow: 'INCOMPLETE SOURCE, USEFUL UI',
-    node: 1,
     description:
-      'The fault-tolerant compiler parses accumulated tokens in real time. Valid subtrees enter the program, growing strings update the constant table, and unclosed tags trigger recovery diagnostics—rendering instantly without waiting for the full response.',
+      'Each incoming chunk triggers a fresh compilation of the accumulated source. Comparing outputs determines whether program, constants, or only recovery diagnostics changed. Valid content appears before the source is complete. Streaming patches do not imply incremental parsing.',
     takeaway:
       'Streaming fault-tolerance preserves usable subtrees so users never wait for stream completion.',
     experiment: 'Pause Source on an Incomplete Tag',
@@ -134,9 +125,8 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Data Binding',
     name: 'Must all interface values be generated by the model?',
     eyebrow: 'STRUCTURE AND DATA, SEPARATELY',
-    node: 4,
     description:
-      'The DSL accesses external fields via data.* bindings. appData is fed directly into the runtime, freeing the model from hallucinations and token bloat by never inlining raw datasets.',
+      'The DSL references data.* fields supplied independently as appData. Updating the snapshot does not change the source or call the model. Values come from the data feed, reducing errors from having the model copy them.',
     takeaway:
       'The same compiled UI program binds to distinct datasets—separating UI topology from data feeds.',
     experiment: 'Switch Data Feeds Without Changing the Program',
@@ -148,7 +138,6 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Boundaries',
     name: 'Why not just eval() the generated code?',
     eyebrow: 'A SMALL LANGUAGE, EXPLICIT RULES',
-    node: 1,
     description:
       'This architecture enforces a strict component whitelist and a sandboxed expression engine. Code compiles into a JSON IR evaluated by an AST interpreter in a Worker. Unauthorized components, prototype access, or globals like window/document are strictly rejected.',
     takeaway:
@@ -162,14 +151,13 @@ const lessonsEn: LessonTranslation[] = [
     short: 'Next Turn',
     name: 'How does current interaction feed into the next turn?',
     eyebrow: 'MAKE CONTEXT EXPLICIT',
-    node: 3,
     description:
-      'Interactive state remains inside the Worker. When initiating a subsequent turn, the host explicitly captures validated context into an issueNewTurn payload, preventing implicit state leakage.',
+      'Moving a slider does not start a conversation. A button event asks the Worker to build issueNewTurn(text) from current state and return it to the host. The full POC submits a new message with validated context and creates a new response; this lab only captures the action, without calling a model.',
     takeaway:
       'Context is explicitly forwarded by the host; the model never has unvetted access to Worker state.',
     experiment: 'Package Current State as a Next-Turn Action',
     instruction:
-      'Adjust the threshold slider, then click "Continue with Current State". Inspect the captured Action text and context snapshot below.',
+      'Adjust the threshold slider, then click "Continue with Current State". Inspect how the captured Action text includes the current threshold and alert count. This lab does not send a new request.',
   },
 ];
 
@@ -181,6 +169,7 @@ export function getLessons(lang: Language): LessonTranslation[] {
 
 const stagesZh: StageTranslation[] = [
   {
+    id: 'source',
     name: '生成描述',
     english: 'DSL SOURCE',
     role: '模型 / 演示模板',
@@ -190,6 +179,7 @@ const stagesZh: StageTranslation[] = [
     code: '{@state threshold = 80}\n<slider value={threshold}\n  onChange={setThreshold} />',
   },
   {
+    id: 'compiler',
     name: '编译结构',
     english: 'COMPILER',
     role: '累计源码 → IR',
@@ -200,6 +190,7 @@ const stagesZh: StageTranslation[] = [
     code: '{\n  program: { states, roots },\n  constants: { … },\n  diagnostics: []\n}',
   },
   {
+    id: 'runtime',
     name: '计算与状态',
     english: 'WEB WORKER',
     role: '受限 AST 解释器',
@@ -210,6 +201,7 @@ const stagesZh: StageTranslation[] = [
     code: 'EVENT { handler, value }\n       ↓\nstate.threshold = 85\n       ↓\noperations: [{ op: "SET", … }]',
   },
   {
+    id: 'host',
     name: '原生界面',
     english: 'REACT HOST',
     role: '操作 → 组件渲染',
@@ -219,6 +211,7 @@ const stagesZh: StageTranslation[] = [
     code: 'CREATE  添加节点\nSET     更新属性\nPLACE   调整子节点\nROOT    更新根顺序\nREMOVE  移除节点',
   },
   {
+    id: 'data',
     name: '独立数据',
     english: 'APP DATA',
     role: '解耦数据流',
@@ -232,6 +225,7 @@ const stagesZh: StageTranslation[] = [
 
 const stagesEn: StageTranslation[] = [
   {
+    id: 'source',
     name: 'Source Gen',
     english: 'DSL SOURCE',
     role: 'Model / Demo Templates',
@@ -242,6 +236,7 @@ const stagesEn: StageTranslation[] = [
     code: '{@state threshold = 80}\n<slider value={threshold}\n  onChange={setThreshold} />',
   },
   {
+    id: 'compiler',
     name: 'Compile IR',
     english: 'COMPILER',
     role: 'Cumulative Source → IR',
@@ -252,6 +247,7 @@ const stagesEn: StageTranslation[] = [
     code: '{\n  program: { states, roots },\n  constants: { … },\n  diagnostics: []\n}',
   },
   {
+    id: 'runtime',
     name: 'State & Eval',
     english: 'WEB WORKER',
     role: 'Sandboxed AST Evaluator',
@@ -262,6 +258,7 @@ const stagesEn: StageTranslation[] = [
     code: 'EVENT { handler, value }\n       ↓\nstate.threshold = 85\n       ↓\noperations: [{ op: "SET", … }]',
   },
   {
+    id: 'host',
     name: 'React Host',
     english: 'REACT HOST',
     role: 'UI Ops → Components',
@@ -271,6 +268,7 @@ const stagesEn: StageTranslation[] = [
     code: 'CREATE  Add node\nSET     Update prop\nPLACE   Reorder child\nROOT    Update roots\nREMOVE  Remove node',
   },
   {
+    id: 'data',
     name: 'App Data',
     english: 'APP DATA',
     role: 'Decoupled Data Lane',

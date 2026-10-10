@@ -1,13 +1,13 @@
 export type Language = 'zh' | 'en';
 
 export type LessonId = 'pipeline' | 'state' | 'streaming' | 'data' | 'boundary' | 'action';
+export type StageId = 'source' | 'compiler' | 'runtime' | 'host' | 'data';
 
 export interface LessonTranslation {
   id: LessonId;
   short: string;
   name: string;
   eyebrow: string;
-  node: number;
   description: string;
   takeaway: string;
   experiment: string;
@@ -15,6 +15,7 @@ export interface LessonTranslation {
 }
 
 export interface StageTranslation {
+  id: StageId;
   name: string;
   english: string;
   role: string;
@@ -278,6 +279,14 @@ export interface Translations {
     uiOps: string;
     dataFeed: string;
     handlerId: string;
+    explicitAction: string;
+    nextTurn: string;
+    focusPrefix: string;
+    moduleLabel: string;
+    pauseMotion: string;
+    resumeMotion: string;
+    note: string;
+    pathDescriptions: Record<LessonId, string>;
     dataLane: string;
     execLayer: string;
   };

@@ -54,7 +54,7 @@ export const en: Translations = {
     sidebarNoteSub1: 'Click any layer in the diagram',
     sidebarNoteSub2: 'to inspect inputs & outputs.',
     readDoc: 'Read Architecture Spec',
-    chapterPrefix: 'CHAPTER 0',
+    chapterPrefix: 'CHAPTER ',
     learnByDoing: 'LEARN BY DOING',
     prevChapter: 'Previous',
     nextChapter: 'Next: ',
@@ -66,12 +66,32 @@ export const en: Translations = {
     view25D: '2.5D',
     viewFlat: 'Flat',
     legendData: 'Program / Data',
-    legendEvent: 'Local Event',
+    legendEvent: 'Events / Actions',
     dsl: 'DSL',
     ir: 'IR',
     uiOps: 'UI OPS',
     dataFeed: 'Independent Data Feed',
-    handlerId: 'Handler ID + Event Payload',
+    handlerId: 'EVENT · Handler ID + Value',
+    explicitAction: 'ACTION · issueNewTurn(text)',
+    nextTurn: 'Host submits a new message + validated context',
+    focusPrefix: 'Chapter focus: ',
+    moduleLabel: 'MODULE',
+    pauseMotion: 'Pause motion',
+    resumeMotion: 'Play motion',
+    note: 'Numbers identify chapters; select a module to inspect its role independently. Moving arrows illustrate paths, not live requests or execution speed.',
+    pathDescriptions: {
+      pipeline:
+        'Template / model → DSL → compiler → JSON IR → Worker → UI operations → React. appData follows a separate input path.',
+      state:
+        'React sends an event → Worker updates state and diffs the tree → React applies UI operations. The model and compiler do not participate.',
+      streaming:
+        'Recompile accumulated source → update changed program / constants / diagnostics → Worker retains state → React updates valid content.',
+      data: 'New appData → Worker re-evaluates data expressions → UI operations update React. Source stays unchanged and data bypasses the model.',
+      boundary:
+        'Compiler validates components, props, and expressions → Worker interprets restricted AST and checks dynamic prop values → React renders registered components.',
+      action:
+        'Button event → Worker produces an explicit action → host submits a new turn → new response. The lab captures the action; the full demo continues the conversation.',
+    },
     dataLane: 'DATA LANE',
     execLayer: 'EXECUTION LAYER',
   },

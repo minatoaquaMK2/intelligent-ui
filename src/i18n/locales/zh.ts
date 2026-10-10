@@ -54,7 +54,7 @@ export const zh: Translations = {
     sidebarNoteSub1: '点击图中任意一层',
     sidebarNoteSub2: '查看它的输入与输出。',
     readDoc: '阅读架构文档',
-    chapterPrefix: 'CHAPTER 0',
+    chapterPrefix: 'CHAPTER ',
     learnByDoing: 'LEARN BY DOING',
     prevChapter: '上一章',
     nextChapter: '下一章：',
@@ -66,12 +66,32 @@ export const zh: Translations = {
     view25D: '2.5D',
     viewFlat: '平面',
     legendData: '程序 / 数据',
-    legendEvent: '本地事件',
+    legendEvent: '事件 / 动作',
     dsl: 'DSL',
     ir: 'IR',
     uiOps: 'UI OPS',
     dataFeed: '独立数据输入',
-    handlerId: '处理器 ID + 事件值',
+    handlerId: 'EVENT · 处理器 ID + 事件值',
+    explicitAction: 'ACTION · issueNewTurn(text)',
+    nextTurn: '宿主提交新消息 + 受控上下文',
+    focusPrefix: '本章关注：',
+    moduleLabel: '模块职责',
+    pauseMotion: '暂停动效',
+    resumeMotion: '播放动效',
+    note: '编号表示教学章节；点击模块可独立查看职责。流动箭头是路径示意，不代表实时请求或执行速度。',
+    pathDescriptions: {
+      pipeline:
+        '模板 / 模型 → DSL → 编译器 → JSON IR → Worker → UI 操作 → React；appData 走独立输入路径。',
+      state:
+        'React 发送事件 → Worker 更新状态并比较组件树 → React 应用 UI 操作。模型和编译器不参与这次交互。',
+      streaming:
+        '累计源码重新编译 → 按变化更新 program / constants / diagnostics → Worker 保留已有状态 → React 更新有效内容。',
+      data: '新 appData → Worker 重算数据表达式 → UI 操作更新 React。源码保持不变，数据不经过模型转抄。',
+      boundary:
+        '编译器校验组件、属性与表达式 → Worker 解释受限 AST 并校验动态属性值 → React 只渲染注册组件。',
+      action:
+        '按钮事件 → Worker 生成显式 Action → 宿主提交下一轮消息 → 新回复。实验只捕获 Action；完整 Demo 执行后续对话。',
+    },
     dataLane: 'DATA LANE',
     execLayer: 'EXECUTION LAYER',
   },
