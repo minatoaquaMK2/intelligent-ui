@@ -43,7 +43,7 @@ export const zh: Translations = {
     noteBottom: '独立 POC · 源码透明 · 实验可运行',
   },
   strip: {
-    sixLessons: '六个核心课题，还原一条完整技术链路',
+    lessonCount: '七个机制课题，一边图解，一边实验',
     middle: 'DIAGRAMS · LIVE EXPERIMENTS · SOURCE CODE',
     scrollExplore: '向下滚动开始探索',
   },
@@ -78,8 +78,23 @@ export const zh: Translations = {
     moduleLabel: '模块职责',
     pauseMotion: '暂停动效',
     resumeMotion: '播放动效',
-    note: '编号表示教学章节；点击模块可独立查看职责。流动箭头是路径示意，不代表实时请求或执行速度。',
+    spacing: '层间距',
+    focusView: '专注视图',
+    exitFocus: '退出专注',
+    previousStep: '上一步',
+    nextStep: '下一步',
+    autoplay: '自动演示',
+    stopAutoplay: '暂停演示',
+    step: 'STEP',
+    selectStep: (name: string) => `查看步骤：${name}`,
+    routeLabel: '执行路线',
+    nativeRoute: '原生组件',
+    webRoute: '网页应用 · 机制示意',
+    webRouteNote: '网页应用路线仅作机制对比；当前业务实验始终使用受限 DSL 与 Worker 原生组件路线。',
+    note: '点击模块查看细节 · 窄屏可横向滑动 · 支持 Tab / Enter。CHAPTER 是章节，STEP 是本图步骤；箭头为教学示意。',
     pathDescriptions: {
+      evidence:
+        '源码实现 → 可运行验证 → 检查输入来源与结论范围。内核真实执行，模板与遥测是模拟输入。',
       pipeline:
         '模板 / 模型 → DSL → 编译器 → JSON IR → Worker → UI 操作 → React；appData 走独立输入路径。',
       state:
@@ -139,6 +154,13 @@ export const zh: Translations = {
       '「重新编译」复用当前 Worker；「重置实验」创建新 Worker。跨编译保留状态，与跨页面刷新持久化是两种不同的能力。',
     footnoteBoundary:
       '当前 POC 没有采用跨域 iframe 沙箱；此处展示的是组件白名单和 AST 语法约束，旨在验证概念原型。',
+    evidenceTitle: '本次实验的验证记录',
+    evidenceCompiled: '源码已通过真实编译器',
+    evidenceWorker: '已收到真实 Worker 计算结果',
+    evidenceInteraction: '已执行本地控件事件 · 模型请求 0',
+    evidencePending: '等待操作',
+    footnoteEvidence:
+      '温度数据和 DSL 均为固定输入。以上记录证明浏览器内的编译与交互机制，不代表真实硬件连接、模型生成质量或生产安全认证。',
     footnoteStreaming:
       '此处按预设时间步切分输入以演示真实编译器解析行为，并非测试模型输出吞吐。最后可用的组件随着有效结构保留。',
   },
@@ -171,15 +193,15 @@ export const zh: Translations = {
     pocIncludes1: (count: number) => `受限 DSL、容错流式编译器与 ${count} 种已注册类型化组件`,
     pocIncludes2: 'Worker 线程内的受限 AST 解释器、状态管理与细粒度组件树 Diff',
     pocIncludes3: '解耦的独立 appData 数据总线、受控 Action 序列化与本地模型适配入口',
-    diffSummary: '与参考机制（如 ChatGPT Intelligent UI）有哪些区别？',
+    diffSummary: '语言与运行时的实现范围',
     diffContent:
-      '本项目编译产物采用标准化 JSON IR，Worker 与宿主间使用结构化对象通信。并未复刻 ChatGPT 内部专有的 DIL 规范、二进制传输协议、跨域 iframe 沙箱或 AppBlock。本站交互实验旨在剖析本项目独立实现的技术逻辑，不代表官方产品能力。',
+      '本项目将受限 DSL 编译为 JSON IR，由 Worker 解释受控 AST，再用结构化 UI 操作驱动 React。网页应用路线仅作图解对比；当前编译器不装载任意 HTML / JavaScript，也没有 AppBlock 或跨域 iframe 执行能力。',
     securitySummary: '状态、数据与安全边界说明',
     securityContent:
       '交互状态可在同一次对话的重编译过程中自动保留，页面刷新后重置。遥测数据来自固定模拟快照。白名单机制与 Worker 隔离提供了基础防御，但在生产落地中仍需配合严格的服务端鉴权、数据脱敏与执行沙箱；当前项目定位为机制验证与技术原型。',
-    references: '延伸阅读 / 灵感来源',
-    ref1: 'OpenUI · How ChatGPT Intelligent UI works',
-    ref2: '参考：ChatGPT 智能 UI · 机制观察室',
+    references: '深入实现',
+    ref1: '架构文档 · 数据与执行协议',
+    ref2: '源码 · 容错编译器',
   },
   footer: {
     tagline: 'Understand the system. Then make it your own.',
@@ -207,7 +229,7 @@ export const zh: Translations = {
       keyIdeaTitle: '生成一次，交互无数次',
       keyIdeaDesc: '调整控件，无需再次调用模型。',
       howItWorks: '了解工作原理',
-      referenceArticle: '参考文章',
+      referenceArticle: '架构文档',
     },
     prompt: {
       inputAria: '描述你想要的交互界面',
@@ -363,7 +385,7 @@ export const zh: Translations = {
     },
     architectureTitle: '从一个想法，到一个界面。',
     architectureSubtitle:
-      '这个 POC 参考 OpenUI 的逆向分析，验证“模型生成、服务端编译、客户端执行”的闭环。',
+      '这个 POC 验证“生成界面描述、流式编译、客户端执行”的闭环，所有机制均可对照源码检查。',
     step1Title: '用语言描述界面',
     step1Text:
       '真实模型输出 DIL 风格源码；演示模式按关键词选择固定模板。输入既包含文字，也包含状态声明和白名单组件。',
@@ -384,10 +406,10 @@ export const zh: Translations = {
     archBoundaryTitle: '明确的 POC 边界',
     archBoundaryText:
       '实现受限 DSL 与 AST 解释器；不执行任意 JavaScript，不实现完整 DIL、AppBlock 或跨域 iframe 沙箱。',
-    readOpenUiArticle: '阅读参考文章：How ChatGPT Intelligent UI works',
-    openUiReference: '参考实现：Open Intelligent UI',
+    readOpenUiArticle: '阅读架构文档：语言与执行协议',
+    openUiReference: '查看源码：状态与组件树运行时',
     openUiNote:
-      '借鉴其领域组件组合与界面状态回传：当前设备选择和筛选条件会随下一轮对话发送。本 POC 使用自己的受限 DSL 与 Worker，不直接依赖 OpenUI SDK。',
+      '当前设备选择和筛选条件可通过受控上下文进入下一轮对话。本 POC 使用受限 DSL、JSON IR 与 Worker 运行时。',
   },
   examples: [
     {

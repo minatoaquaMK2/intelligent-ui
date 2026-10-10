@@ -32,8 +32,8 @@ test('i18n: translations dictionaries have full symmetry and no missing keys', (
 test('i18n: lessons and stages exist for both zh and en and have matching IDs', () => {
   const lessonsZh = getLessons('zh');
   const lessonsEn = getLessons('en');
-  assert.equal(lessonsZh.length, 6);
-  assert.equal(lessonsEn.length, 6);
+  assert.equal(lessonsZh.length, 7);
+  assert.equal(lessonsEn.length, 7);
 
   for (let i = 0; i < lessonsZh.length; i++) {
     assert.equal(lessonsZh[i].id, lessonsEn[i].id);

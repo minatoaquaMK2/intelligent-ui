@@ -714,7 +714,7 @@ function AppInner() {
             </button>
           </div>
           <a
-            href="https://www.openui.com/blog/how-chatgpt-intelligent-ui-works"
+            href="https://github.com/minatoaquaMK2/intelligent-ui/blob/main/docs/architecture.md"
             target="_blank"
             rel="noreferrer"
           >

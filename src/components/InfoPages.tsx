@@ -152,7 +152,7 @@ export function ArchitecturePage() {
       </div>
       <a
         className="reference-link"
-        href="https://www.openui.com/blog/how-chatgpt-intelligent-ui-works"
+        href="https://github.com/minatoaquaMK2/intelligent-ui/blob/main/docs/architecture.md"
         target="_blank"
         rel="noreferrer"
       >
@@ -160,7 +160,7 @@ export function ArchitecturePage() {
       </a>
       <a
         className="reference-link"
-        href="https://github.com/thesysdev/open-intelligent-ui"
+        href="https://github.com/minatoaquaMK2/intelligent-ui/blob/main/src/core/runtime.ts"
         target="_blank"
         rel="noreferrer"
       >

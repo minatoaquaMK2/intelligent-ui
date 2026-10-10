@@ -1,6 +1,7 @@
 export type Language = 'zh' | 'en';
 
-export type LessonId = 'pipeline' | 'state' | 'streaming' | 'data' | 'boundary' | 'action';
+export type LessonId =
+  'pipeline' | 'state' | 'streaming' | 'data' | 'boundary' | 'action' | 'evidence';
 export type StageId = 'source' | 'compiler' | 'runtime' | 'host' | 'data';
 
 export interface LessonTranslation {
@@ -250,7 +251,7 @@ export interface Translations {
     noteBottom: string;
   };
   strip: {
-    sixLessons: string;
+    lessonCount: string;
     middle: string;
     scrollExplore: string;
   };
@@ -285,6 +286,19 @@ export interface Translations {
     moduleLabel: string;
     pauseMotion: string;
     resumeMotion: string;
+    spacing: string;
+    focusView: string;
+    exitFocus: string;
+    previousStep: string;
+    nextStep: string;
+    autoplay: string;
+    stopAutoplay: string;
+    step: string;
+    selectStep: (name: string) => string;
+    routeLabel: string;
+    nativeRoute: string;
+    webRoute: string;
+    webRouteNote: string;
     note: string;
     pathDescriptions: Record<LessonId, string>;
     dataLane: string;
@@ -332,6 +346,12 @@ export interface Translations {
     footnoteState: string;
     footnoteBoundary: string;
     footnoteStreaming: string;
+    evidenceTitle: string;
+    evidenceCompiled: string;
+    evidenceWorker: string;
+    evidenceInteraction: string;
+    evidencePending: string;
+    footnoteEvidence: string;
   };
   demo: {
     sectionLabel: string;

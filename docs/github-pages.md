@@ -4,7 +4,9 @@
 - 独立试用：<https://minatoaquamk2.github.io/intelligent-ui/demo/>
 - 仓库：<https://github.com/minatoaquaMK2/intelligent-ui>
 
-教学页用交互架构图与六组真实实验解释项目的 DSL、编译、状态、流式容错、数据绑定和显式 action。它复用项目的编译器、Worker 和 React 渲染器。页面不声称复刻 ChatGPT 内部实现。
+教学页用七章独立机制图与真实实验解释全链路、本地交互、流式生成、数据直达、两种执行路线、下一轮对话和证据边界。每章支持模块选择、步骤切换、自动演示、流动箭头、2.5D / 平面、层间距与专注视图；章节编号与本图步骤编号独立。实验保留 GPU 温度与阈值业务，完整试用保留机架、GPU 与网络监控。
+
+图解直接映射到项目源码。原生组件路线实际运行受限 DSL、编译器、Worker 与 React 渲染器；网页应用路线仅为机制对比，不是编译器已实现的能力。第七章显示真实编译与 Worker 回包验证记录，并区分固定模板、模拟遥测与尚未验证的生产能力。
 
 ## 本地预览与构建
 
@@ -41,4 +43,3 @@ npm run pages:preview
 
 - [GitHub Pages 自定义工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 - [Vite 静态部署](https://vite.dev/guide/static-deploy.html)
-- [交互教学页面参考](https://kejun.github.io/demos/chatgpt-intelligent-ui/)

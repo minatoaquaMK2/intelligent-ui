@@ -43,7 +43,7 @@ export const en: Translations = {
     noteBottom: 'Self-contained POC · Transparent Source · Live Experiments',
   },
   strip: {
-    sixLessons: 'Six core topics reconstructing a complete technical pipeline',
+    lessonCount: 'Seven mechanisms, illustrated and tested hands-on',
     middle: 'DIAGRAMS · LIVE EXPERIMENTS · SOURCE CODE',
     scrollExplore: 'SCROLL TO EXPLORE',
   },
@@ -78,8 +78,24 @@ export const en: Translations = {
     moduleLabel: 'MODULE',
     pauseMotion: 'Pause motion',
     resumeMotion: 'Play motion',
-    note: 'Numbers identify chapters; select a module to inspect its role independently. Moving arrows illustrate paths, not live requests or execution speed.',
+    spacing: 'Layer spacing',
+    focusView: 'Focus view',
+    exitFocus: 'Exit focus',
+    previousStep: 'Previous step',
+    nextStep: 'Next step',
+    autoplay: 'Autoplay',
+    stopAutoplay: 'Pause tour',
+    step: 'STEP',
+    selectStep: (name: string) => `Inspect step: ${name}`,
+    routeLabel: 'Execution route',
+    nativeRoute: 'Native components',
+    webRoute: 'Web app · Conceptual',
+    webRouteNote:
+      'The web-app route is illustrative only. Business labs always use the restricted DSL and native component Worker route.',
+    note: 'Click a module · Scroll horizontally on small screens · Tab / Enter supported. CHAPTER identifies topics; STEP identifies scene modules. Paths are illustrative.',
     pathDescriptions: {
+      evidence:
+        'Source → runnable verification → inspect input origins and claim scope. The engine runs for real; templates and telemetry are simulated.',
       pipeline:
         'Template / model → DSL → compiler → JSON IR → Worker → UI operations → React. appData follows a separate input path.',
       state:
@@ -140,6 +156,13 @@ export const en: Translations = {
       '"Recompile" reuses the active Worker instance; "Reset" creates a fresh Worker. Retaining state across recompilation is distinct from persisting across page refreshes.',
     footnoteBoundary:
       'This POC does not implement cross-origin iframe sandboxing; it demonstrates component whitelisting and AST validation as an architectural proof-of-concept.',
+    evidenceTitle: 'Verification record for this experiment',
+    evidenceCompiled: 'Source passed the real compiler',
+    evidenceWorker: 'Received actual Worker results',
+    evidenceInteraction: 'Executed a local control event · 0 model calls',
+    evidencePending: 'Awaiting interaction',
+    footnoteEvidence:
+      'Temperature data and DSL are fixed inputs. This record demonstrates browser compilation and interaction, not hardware connectivity, model quality or production security certification.',
     footnoteStreaming:
       'Source slicing runs at fixed intervals to illustrate parser recovery, not as a benchmark for model throughput. Valid subtrees persist throughout.',
   },
@@ -174,15 +197,15 @@ export const en: Translations = {
     pocIncludes2: 'Worker-sandboxed AST interpreter, persistent state management, and tree diffing',
     pocIncludes3:
       'Decoupled appData data lane, explicit action serialization, and local model adapters',
-    diffSummary: 'How does this differ from ChatGPT Intelligent UI?',
+    diffSummary: 'Language and runtime scope',
     diffContent:
-      'This project targets a JSON-based IR and structured Worker messages. It does not replicate ChatGPT’s proprietary DIL specification, binary wire protocols, cross-origin iframe sandboxes, or AppBlock. The experiments here illustrate this standalone implementation and do not represent internal product designs.',
+      'This project compiles restricted DSL into JSON IR, interprets controlled AST in a Worker, and drives React using structured UI operations. The web-app route is a conceptual comparison. The compiler does not load arbitrary HTML / JavaScript, AppBlock, or cross-origin iframe execution.',
     securitySummary: 'State, data, and security considerations',
     securityContent:
       'Component state persists across recompilations within the same session and resets on page reload. Telemetry data is simulated. While schema whitelisting and Worker isolation provide defense-in-depth, production deployments still require backend authorization, data sanitization, and strict sandboxing; this project serves as an architectural prototype.',
-    references: 'Further Reading & References',
-    ref1: 'OpenUI · How ChatGPT Intelligent UI works',
-    ref2: 'Reference: ChatGPT Intelligent UI Lab (Kejun)',
+    references: 'Explore the Implementation',
+    ref1: 'Architecture · Data & execution protocols',
+    ref2: 'Source · Recovery compiler',
   },
   footer: {
     tagline: 'Understand the system. Then make it your own.',
@@ -210,7 +233,7 @@ export const en: Translations = {
       keyIdeaTitle: 'Generate Once, Interact Endlessly',
       keyIdeaDesc: 'Tweak controls locally without calling the model again.',
       howItWorks: 'How it works',
-      referenceArticle: 'Reference Article',
+      referenceArticle: 'Architecture Docs',
     },
     prompt: {
       inputAria: 'Describe desired interface',
@@ -393,10 +416,10 @@ export const en: Translations = {
     archBoundaryTitle: 'Explicit POC Boundaries',
     archBoundaryText:
       'Restricted DSL and AST interpreter; executes zero arbitrary scripts, does not replicate full DIL, AppBlock, or iframe sandboxes.',
-    readOpenUiArticle: 'Read reference article: How ChatGPT Intelligent UI works',
-    openUiReference: 'Reference implementation: Open Intelligent UI',
+    readOpenUiArticle: 'Read architecture: Language & execution protocols',
+    openUiReference: 'Read source: State & component-tree runtime',
     openUiNote:
-      'Inspired by its component composition and state feedback. This POC uses a custom restricted DSL and Worker runtime.',
+      'Current device selection and filters can enter the next turn through validated context. This POC uses restricted DSL, JSON IR and a Worker runtime.',
   },
   examples: [
     {

@@ -51,7 +51,8 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           (revision ? `\n<caption>${t.lab.recompileCount(revision)}</caption>` : '');
 
   const compilation = useMemo(() => compile(source), [source]);
-  const appData = lesson === 'data' && variant === 1 ? fixtureB : fixtureA;
+  const appData =
+    (lesson === 'data' || lesson === 'evidence') && variant === 1 ? fixtureB : fixtureA;
   const previous = useRef<Compilation | undefined>(undefined);
   const update = useMemo(() => {
     const old = previous.current;
@@ -126,6 +127,7 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             setVariant(0);
             setRevision(0);
             setInstance((n) => n + 1);
+            setReport(undefined);
             setInteractions(0);
             setMessage('');
           }}
@@ -134,7 +136,7 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         </button>
       </div>
       <div className="s-experiment-controls">
-        {lesson === 'state' && (
+        {(lesson === 'state' || lesson === 'evidence') && (
           <button className="s-control" onClick={() => setRevision((n) => n + 1)}>
             <Code2 size={15} />
             {t.lab.recompileKeepState}
@@ -163,7 +165,7 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             </button>
           </>
         )}
-        {lesson === 'data' && (
+        {(lesson === 'data' || lesson === 'evidence') && (
           <div className="s-segment" aria-label={t.lab.simData}>
             {[t.lab.snapshotA, t.lab.snapshotB].map((name, i) => (
               <button
@@ -293,6 +295,24 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           </div>
         </div>
       </div>
+      {lesson === 'evidence' && (
+        <div className="s-evidence-record" aria-live="polite">
+          <h4>{t.lab.evidenceTitle}</h4>
+          <ul>
+            {[
+              [compilation.diagnostics.length === 0, t.lab.evidenceCompiled],
+              [!!report, t.lab.evidenceWorker],
+              [interactions > 0, t.lab.evidenceInteraction],
+            ].map(([verified, label]) => (
+              <li key={String(label)} className={verified ? 'is-verified' : ''}>
+                {verified ? <Check size={14} /> : <Square size={12} />}
+                {label}
+                {!verified && ` · ${t.lab.evidencePending}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="s-experiment-note">
         <ArrowDown size={16} />
         <p>{info.takeaway}</p>
@@ -310,6 +330,7 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
       {lesson === 'state' && <p className="s-footnote">{t.lab.footnoteState}</p>}
       {lesson === 'boundary' && <p className="s-footnote">{t.lab.footnoteBoundary}</p>}
       {lesson === 'streaming' && <p className="s-footnote">{t.lab.footnoteStreaming}</p>}
+      {lesson === 'evidence' && <p className="s-footnote">{t.lab.footnoteEvidence}</p>}
     </section>
   );
 }

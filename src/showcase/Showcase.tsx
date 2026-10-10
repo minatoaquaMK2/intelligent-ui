@@ -14,16 +14,13 @@ import {
   Layers3,
   Maximize2,
   Menu,
-  Pause,
-  Play,
   X,
 } from 'lucide-react';
 import { MechanismLab } from './MechanismLab';
-import { COMPONENT_COUNT, getLessons, getStages, REPO, sourceLink } from './lessons';
+import { COMPONENT_COUNT, getLessons, REPO, sourceLink } from './lessons';
 import { I18nProvider, useI18n } from '../i18n';
-import type { StageId } from '../i18n/types';
-import { ArchitectureDiagram } from './ArchitectureDiagram';
-import { formatChapterNumber, lessonArchitecture } from './architecture';
+import { MechanismScene } from './MechanismScene';
+import { formatChapterNumber } from './architecture';
 import '../styles.css';
 
 function Brand() {
@@ -45,7 +42,6 @@ function Brand() {
 function ShowcaseContent() {
   const { t, lang, toggleLang } = useI18n();
   const lessons = getLessons(lang);
-  const stages = getStages(lang);
 
   const [chapter, setChapter] = useState(() =>
     Math.max(
@@ -53,22 +49,17 @@ function ShowcaseContent() {
       lessons.findIndex((item) => `#${item.id}` === window.location.hash),
     ),
   );
-  const [selected, setSelected] = useState<StageId>(lessonArchitecture[lessons[chapter].id].focus);
-  const [flat, setFlat] = useState(false);
-  const [animated, setAnimated] = useState(true);
   const [menu, setMenu] = useState(false);
   const [demoLoaded, setDemoLoaded] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
 
   const lesson = lessons[chapter] ?? lessons[0];
-  const stage = stages.find((item) => item.id === selected) ?? stages[0];
   const chapterNumber = formatChapterNumber(chapter);
   const demoUrl = `${import.meta.env.BASE_URL}demo/`;
 
   function choose(index: number, scroll = false) {
     setChapter(index);
-    setSelected(lessonArchitecture[lessons[index].id].focus);
     history.replaceState(null, '', `#${lessons[index].id}`);
     if (scroll)
       document.getElementById('learn')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -79,7 +70,6 @@ function ShowcaseContent() {
       const index = lessons.findIndex((item) => `#${item.id}` === location.hash);
       if (index >= 0) {
         setChapter(index);
-        setSelected(lessonArchitecture[lessons[index].id].focus);
       }
     };
     window.addEventListener('hashchange', sync);
@@ -193,7 +183,7 @@ function ShowcaseContent() {
         <div className="s-intro-strip s-container">
           <span>
             <BookOpen size={15} />
-            {t.strip.sixLessons}
+            {t.strip.lessonCount}
           </span>
           <span>{t.strip.middle}</span>
           <a href="#learn">
@@ -251,65 +241,7 @@ function ShowcaseContent() {
             <h2 className="s-lesson-title">{lesson.name}</h2>
             <p className="s-lesson-description">{lesson.description}</p>
 
-            <div className="s-diagram-panel">
-              <div className="s-diagram-toolbar">
-                <div className="s-diagram-legend">
-                  <span>
-                    <i />
-                    {t.diagram.legendData}
-                  </span>
-                  <span>
-                    <i />
-                    {t.diagram.legendEvent}
-                  </span>
-                </div>
-                <div className="s-diagram-controls">
-                  <button className="s-motion-toggle" onClick={() => setAnimated(!animated)}>
-                    {animated ? <Pause size={12} /> : <Play size={12} />}
-                    {animated ? t.diagram.pauseMotion : t.diagram.resumeMotion}
-                  </button>
-                  <div className="s-segment" aria-label={t.diagram.viewAngle}>
-                    <button aria-pressed={!flat} onClick={() => setFlat(false)}>
-                      {t.diagram.view25D}
-                    </button>
-                    <button aria-pressed={flat} onClick={() => setFlat(true)}>
-                      {t.diagram.viewFlat}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <ArchitectureDiagram
-                selected={selected}
-                onSelect={setSelected}
-                flat={flat}
-                animated={animated}
-                stages={stages}
-                lesson={lesson}
-                chapterNumber={chapterNumber}
-                labels={t.diagram}
-              />
-              <div className="s-layer-inspector" aria-live="polite">
-                <div className="s-layer-marker">
-                  <Layers3 size={24} strokeWidth={1.5} aria-hidden="true" />
-                  <span>{t.diagram.moduleLabel}</span>
-                </div>
-                <div className="s-layer-description">
-                  <h3>
-                    {stage.name}
-                    <span>{stage.role}</span>
-                  </h3>
-                  <span className="s-inspected-module">{stage.english}</span>
-                  <p>{stage.detail}</p>
-                  <a href={sourceLink(stage.file)} target="_blank" rel="noreferrer">
-                    {stage.file}
-                    <ArrowUpRight size={12} />
-                  </a>
-                </div>
-                <pre>
-                  <code>{stage.code}</code>
-                </pre>
-              </div>
-            </div>
+            <MechanismScene key={lesson.id} lesson={lesson} chapterNumber={chapterNumber} />
 
             <MechanismLab key={`${lesson.id}-${lang}`} lesson={lesson.id} />
 
@@ -460,19 +392,11 @@ function ShowcaseContent() {
             </details>
             <div className="s-references">
               <span>{t.about.references}</span>
-              <a
-                href="https://www.openui.com/blog/how-chatgpt-intelligent-ui-works"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={sourceLink('docs/architecture.md')} target="_blank" rel="noreferrer">
                 {t.about.ref1}
                 <ArrowUpRight size={13} />
               </a>
-              <a
-                href="https://kejun.github.io/demos/chatgpt-intelligent-ui/"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={sourceLink('src/core/compiler.ts')} target="_blank" rel="noreferrer">
                 {t.about.ref2}
                 <ArrowUpRight size={13} />
               </a>
