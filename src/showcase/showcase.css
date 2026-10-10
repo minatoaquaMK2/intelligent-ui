@@ -90,6 +90,33 @@ html {
 .s-text-link:hover {
   color: #618359;
 }
+.s-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.s-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #ced9ca;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--s-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.s-lang-toggle:hover {
+  background: rgba(41, 79, 69, 0.08);
+  border-color: #9cb5a4;
+  color: #294f45;
+}
+.s-mobile-lang {
+  display: none;
+}
 .s-github {
   display: flex;
   align-items: center;
@@ -1323,11 +1350,20 @@ html {
   .s-brand {
     gap: 8px;
   }
+  .s-header-actions {
+    margin-left: auto;
+    gap: 6px;
+  }
+  .s-lang-toggle {
+    padding: 6px 8px;
+    font-size: 10px;
+    gap: 4px;
+  }
   .s-github {
     padding: 6px 8px;
     font-size: 10px;
     gap: 5px;
-    margin-left: auto;
+    margin-left: 0;
   }
   .s-github > svg:last-child {
     display: none;

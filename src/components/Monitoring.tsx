@@ -11,18 +11,45 @@ import {
 import { useId, type ReactNode } from 'react';
 import { number, record, records } from '../core/monitoring';
 import type { Data, Value } from '../core/types';
+import { useI18n } from '../i18n';
 
 const text = (value: Value | undefined, fallback = '') =>
   value == null ? fallback : String(value);
-const statuses: Record<string, string> = {
-  healthy: '正常',
-  warning: '警告',
-  critical: '严重',
-  idle: '未使用',
-  unknown: '未知',
+
+const getStatusLabel = (s: string, lang: 'zh' | 'en') => {
+  if (lang === 'en') {
+    switch (s) {
+      case 'healthy':
+        return 'Healthy';
+      case 'warning':
+        return 'Warning';
+      case 'critical':
+        return 'Critical';
+      case 'idle':
+        return 'Idle';
+      default:
+        return 'Unknown';
+    }
+  }
+  switch (s) {
+    case 'healthy':
+      return '正常';
+    case 'warning':
+      return '警告';
+    case 'critical':
+      return '严重';
+    case 'idle':
+      return '未使用';
+    default:
+      return '未知';
+  }
 };
-const status = (value: Value | undefined) =>
-  Object.hasOwn(statuses, text(value)) ? text(value) : 'unknown';
+
+const status = (value: Value | undefined) => {
+  const s = text(value);
+  return ['healthy', 'warning', 'critical', 'idle'].includes(s) ? s : 'unknown';
+};
+
 const DeviceIcon = ({ category, size = 18 }: { category: Value | undefined; size?: number }) =>
   category === '交换机' ? (
     <Network size={size} />
@@ -31,15 +58,22 @@ const DeviceIcon = ({ category, size = 18 }: { category: Value | undefined; size
   ) : (
     <Server size={size} />
   );
-const Badge = ({ value }: { value: Value | undefined }) => (
-  <span className={`health-badge health-${status(value)}`}>
-    <i />
-    {statuses[status(value)]}
-  </span>
-);
+
+const Badge = ({ value }: { value: Value | undefined }) => {
+  const { lang } = useI18n();
+  const st = status(value);
+  return (
+    <span className={`health-badge health-${st}`}>
+      <i />
+      {getStatusLabel(st, lang)}
+    </span>
+  );
+};
+
 type SelectionProps = { props: Data; onSelect: (id: string) => void };
 
 export function RackView({ props, onSelect }: SelectionProps) {
+  const { lang } = useI18n();
   const devices = records(props.devices)
     .filter((device) => number(device.u) >= 1 && number(device.u) + number(device.units) <= 43)
     .sort((a, b) => number(b.u) - number(a.u));
@@ -51,7 +85,7 @@ export function RackView({ props, onSelect }: SelectionProps) {
       <div className="rack-slot rack-gap" key={`gap-${top}`}>
         <span className="rack-unit">{top === bottom ? top : `${top}–${bottom}`}</span>
         <div>
-          <span>空闲 / 已筛选</span>
+          <span>{lang === 'en' ? 'Empty / Filtered' : '空闲 / 已筛选'}</span>
         </div>
       </div>,
     );
@@ -68,7 +102,7 @@ export function RackView({ props, onSelect }: SelectionProps) {
           type="button"
           className={`rack-device rack-${device.category === '交换机' ? 'switch' : device.category === 'GPU 服务器' ? 'gpu' : 'server'} health-${status(device.status)} ${props.value === device.id ? 'is-selected' : ''}`}
           aria-pressed={props.value === device.id}
-          aria-label={`查看 ${text(device.id)}，${text(device.category)}，${statuses[status(device.status)]}`}
+          aria-label={`查看 ${text(device.id)}，${text(device.category)}，${getStatusLabel(status(device.status), lang)}`}
           disabled={!props.onChange}
           onClick={() => onSelect(text(device.id))}
         >
@@ -98,7 +132,7 @@ export function RackView({ props, onSelect }: SelectionProps) {
           <Server size={16} />
           <strong>{text(props.label)}</strong>
         </span>
-        <span>42U · 正面示意</span>
+        <span>{lang === 'en' ? '42U · Front Elevation' : '42U · 正面示意'}</span>
       </div>
       <div className="rack-cabinet">
         <div className="rack-topline">
@@ -117,20 +151,35 @@ export function RackView({ props, onSelect }: SelectionProps) {
         <Badge value="warning" />
         <Badge value="critical" />
       </div>
-      {!devices.length && <p className="monitor-empty">没有匹配的设备，请调整筛选条件。</p>}
-      <p className="monitor-footnote">点击设备查看指标 · U 位按顺序展示，间距为示意</p>
+      {!devices.length && (
+        <p className="monitor-empty">
+          {lang === 'en'
+            ? 'No matching devices, please adjust filters.'
+            : '没有匹配的设备，请调整筛选条件。'}
+        </p>
+      )}
+      <p className="monitor-footnote">
+        {lang === 'en'
+          ? 'Click device to view telemetry · Slots ordered for illustration'
+          : '点击设备查看指标 · U 位按顺序展示，间距为示意'}
+      </p>
     </div>
   );
 }
 
 export function DeviceDetail({ props }: { props: Data }) {
+  const { lang } = useI18n();
   const device = record(props.device);
   if (!device.id)
     return (
       <div className="monitor-empty monitor-empty-panel">
         <Server size={28} />
-        <p>当前筛选下没有设备</p>
-        <small>关闭告警筛选或选择其他设备类型</small>
+        <p>{lang === 'en' ? 'No devices in current filter' : '当前筛选下没有设备'}</p>
+        <small>
+          {lang === 'en'
+            ? 'Disable alert filter or select another device type'
+            : '关闭告警筛选或选择其他设备类型'}
+        </small>
       </div>
     );
   return (
@@ -138,7 +187,7 @@ export function DeviceDetail({ props }: { props: Data }) {
       <div className="monitor-heading">
         <span>
           <DeviceIcon category={device.category} />
-          <strong>设备详情</strong>
+          <strong>{lang === 'en' ? 'Device Details' : '设备详情'}</strong>
         </span>
         <Badge value={device.status} />
       </div>
@@ -147,10 +196,11 @@ export function DeviceDetail({ props }: { props: Data }) {
       <p className="device-role">{text(device.role)}</p>
       <div className="device-meta">
         <span>
-          管理 IP <b>{text(device.management)}</b>
+          {lang === 'en' ? 'Mgmt IP ' : '管理 IP '}
+          <b>{text(device.management)}</b>
         </span>
         <span>
-          位置{' '}
+          {lang === 'en' ? 'Slot ' : '位置 '}
           <b>
             U{number(device.u)}–{number(device.u) + number(device.units) - 1}
           </b>
@@ -181,7 +231,8 @@ export function DeviceDetail({ props }: { props: Data }) {
       <div className="device-environment">
         <span>
           <Thermometer size={13} />
-          进风 {number(device.inlet)}°C
+          {lang === 'en' ? 'Inlet ' : '进风 '}
+          {number(device.inlet)}°C
         </span>
         <span>
           <Zap size={13} />
@@ -193,6 +244,7 @@ export function DeviceDetail({ props }: { props: Data }) {
 }
 
 export function Trend({ props }: { props: Data }) {
+  const { lang } = useI18n();
   const id = useId();
   const values = (Array.isArray(props.values) ? props.values : []).slice(0, 100).map(number);
   const labels = Array.isArray(props.labels) ? props.labels : [];
@@ -210,12 +262,14 @@ export function Trend({ props }: { props: Data }) {
       <figcaption>
         <span>
           <Activity size={15} />
-          {text(props.title, '指标趋势')}
+          {text(props.title, lang === 'en' ? 'Metric Trend' : '指标趋势')}
         </span>
         <small>{text(props.suffix)}</small>
       </figcaption>
       {!values.length ? (
-        <div className="trend-empty">当前筛选无历史数据</div>
+        <div className="trend-empty">
+          {lang === 'en' ? 'No historical data in current filter' : '当前筛选无历史数据'}
+        </div>
       ) : (
         <>
           <svg
@@ -249,31 +303,12 @@ export function Trend({ props }: { props: Data }) {
               points={`38,140 ${line} ${x(values.length - 1)},140`}
               fill={`url(#${gradient})`}
             />
-            <polyline
-              points={line}
-              fill="none"
-              stroke="#0076ce"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
+            <polyline points={line} fill="none" className="trend-line" />
             {threshold !== undefined && (
-              <g>
-                <line
-                  x1="38"
-                  x2="380"
-                  y1={y(threshold)}
-                  y2={y(threshold)}
-                  className="trend-threshold"
-                />
-                <text
-                  x="380"
-                  y={Math.max(12, y(threshold) - 6)}
-                  textAnchor="end"
-                  className="threshold-label"
-                >
-                  阈值 {threshold}
-                  {text(props.suffix)}
+              <g className="trend-threshold-line">
+                <line x1="38" x2="380" y1={y(threshold)} y2={y(threshold)} />
+                <text x="382" y={y(threshold) + 3}>
+                  {lang === 'en' ? `Threshold ${threshold}` : `阈值 ${threshold}`}
                 </text>
               </g>
             )}
@@ -282,18 +317,16 @@ export function Trend({ props }: { props: Data }) {
                 key={i}
                 cx={x(i)}
                 cy={y(value)}
-                r={i === values.length - 1 ? 4 : 2}
-                fill="#0076ce"
+                r="3"
+                className={`trend-dot ${threshold !== undefined && value >= threshold ? 'trend-dot-hot' : ''}`}
               >
                 <title>
-                  {text(labels[i])} · {value}
-                  {text(props.suffix)}
+                  {text(labels[i], String(i + 1))}: {value} {text(props.suffix)}
                 </title>
               </circle>
             ))}
-            {[0, Math.floor((values.length - 1) / 2), values.length - 1]
-              .filter((v, i, a) => a.indexOf(v) === i)
-              .map((i) => (
+            {labels.length > 0 &&
+              [0, Math.floor(labels.length / 2), labels.length - 1].map((i) => (
                 <text
                   key={i}
                   x={x(i)}
@@ -308,10 +341,11 @@ export function Trend({ props }: { props: Data }) {
           <div className="trend-caption">
             <span>
               <i />
-              预置历史数据
+              {lang === 'en' ? 'Preset Telemetry' : '预置历史数据'}
             </span>
             <strong>
-              最新 {values.at(-1)} {text(props.suffix)}
+              {lang === 'en' ? 'Latest ' : '最新 '}
+              {values.at(-1)} {text(props.suffix)}
             </strong>
           </div>
         </>
@@ -321,13 +355,18 @@ export function Trend({ props }: { props: Data }) {
 }
 
 export function GpuGrid({ props, onSelect }: SelectionProps) {
+  const { lang } = useI18n();
   const cards = records(props.cards);
   if (!cards.length)
     return (
       <div className="monitor-empty monitor-empty-panel">
         <CheckCircle2 size={28} />
-        <p>当前没有温度越限 GPU</p>
-        <small>降低阈值或关闭筛选可查看所有 GPU</small>
+        <p>{lang === 'en' ? 'No over-temp GPUs currently' : '当前没有温度越限 GPU'}</p>
+        <small>
+          {lang === 'en'
+            ? 'Lower threshold or disable filter to view all GPUs'
+            : '降低阈值或关闭筛选可查看所有 GPU'}
+        </small>
       </div>
     );
   return (
@@ -340,14 +379,16 @@ export function GpuGrid({ props, onSelect }: SelectionProps) {
             key={text(card.id)}
             className={`gpu-card ${hot ? 'gpu-hot' : ''} ${props.value === card.id ? 'is-selected' : ''}`}
             aria-pressed={props.value === card.id}
-            aria-label={`查看 ${text(card.id)}，${number(card.temperature)}°C${hot ? '，温度越限' : ''}`}
+            aria-label={`查看 ${text(card.id)}，${number(card.temperature)}°C${hot ? (lang === 'en' ? ', over threshold' : '，温度越限') : ''}`}
             disabled={!props.onChange}
             onClick={() => onSelect(text(card.id))}
           >
             <div className="gpu-card-heading">
               <Cpu size={19} />
               <strong>{text(card.name)}</strong>
-              <span className={hot ? 'gpu-hot-label' : ''}>{hot ? '越限' : '正常'}</span>
+              <span className={hot ? 'gpu-hot-label' : ''}>
+                {hot ? (lang === 'en' ? 'Over-temp' : '越限') : lang === 'en' ? 'Normal' : '正常'}
+              </span>
             </div>
             <span className="gpu-host">{text(card.host)}</span>
             <div className="gpu-util">
@@ -355,25 +396,25 @@ export function GpuGrid({ props, onSelect }: SelectionProps) {
                 {number(card.utilization)}
                 <small>%</small>
               </b>
-              <span>GPU 利用率</span>
+              <span>{lang === 'en' ? 'GPU Utilization' : 'GPU 利用率'}</span>
             </div>
             <div className="meter-track">
               <i style={{ width: `${Math.max(0, Math.min(100, number(card.utilization)))}%` }} />
             </div>
             <div className="gpu-measure">
-              <span>显存</span>
+              <span>{lang === 'en' ? 'Memory' : '显存'}</span>
               <strong>
                 {number(card.memoryUsed)} / {number(card.memoryTotal)} GB
               </strong>
             </div>
             <div className="gpu-measure">
-              <span>温度</span>
+              <span>{lang === 'en' ? 'Temp' : '温度'}</span>
               <strong className={hot ? 'hot-value' : ''}>
                 {number(card.temperature)} °C {hot && <AlertTriangle size={11} />}
               </strong>
             </div>
             <div className="gpu-measure">
-              <span>功耗</span>
+              <span>{lang === 'en' ? 'Power' : '功耗'}</span>
               <strong>{number(card.power)} W</strong>
             </div>
           </button>
@@ -384,15 +425,16 @@ export function GpuGrid({ props, onSelect }: SelectionProps) {
 }
 
 export function PortGrid({ props, onSelect }: SelectionProps) {
+  const { lang } = useI18n();
   const ports = records(props.ports).slice(0, 64);
   return (
     <div className="port-panel" role="group" aria-label="交换机端口面板">
       <div className="monitor-heading">
         <span>
           <Network size={17} />
-          <strong>端口状态</strong>
+          <strong>{lang === 'en' ? 'Port Status' : '端口状态'}</strong>
         </span>
-        <span>点击端口查看流量</span>
+        <span>{lang === 'en' ? 'Click port to view traffic' : '点击端口查看流量'}</span>
       </div>
       <div className="port-grid">
         {ports.map((port) => (
@@ -401,7 +443,7 @@ export function PortGrid({ props, onSelect }: SelectionProps) {
             key={text(port.id)}
             className={`port health-${status(port.status)} ${props.value === port.id ? 'is-selected' : ''}`}
             aria-pressed={props.value === port.id}
-            aria-label={`${text(port.label)}，${statuses[status(port.status)]}，${text(port.peer)}`}
+            aria-label={`${text(port.label)}，${getStatusLabel(status(port.status), lang)}，${text(port.peer)}`}
             disabled={!props.onChange}
             onClick={() => onSelect(text(port.id))}
             title={`${text(port.label)} · ${text(port.peer)}`}
@@ -416,31 +458,36 @@ export function PortGrid({ props, onSelect }: SelectionProps) {
         <Badge value="warning" />
         <span className="health-badge health-critical">
           <i />
-          链路 Down
+          {lang === 'en' ? 'Link Down' : '链路 Down'}
         </span>
         <Badge value="idle" />
       </div>
-      <p className="monitor-footnote">1–44 · 25 Gbps / 45–48 · 100 Gbps 上联 · 演示配置</p>
+      <p className="monitor-footnote">
+        {lang === 'en'
+          ? '1–44 · 25G / 45–48 · 100G Uplink · Demo config'
+          : '1–44 · 25 Gbps / 45–48 · 100 Gbps 上联 · 演示配置'}
+      </p>
     </div>
   );
 }
 
 export function AlertList({ props }: { props: Data }) {
+  const { lang } = useI18n();
   const items = records(props.items).slice(0, 64);
   return (
     <div className="monitor-alerts" role="group" aria-label="活动告警列表">
       <div className="monitor-heading">
         <span>
           <AlertTriangle size={16} />
-          <strong>活动告警</strong>
+          <strong>{lang === 'en' ? 'Active Alerts' : '活动告警'}</strong>
           <b className="alert-count">{items.length}</b>
         </span>
-        <span>当前筛选范围</span>
+        <span>{lang === 'en' ? 'Current Filter Scope' : '当前筛选范围'}</span>
       </div>
       {!items.length ? (
         <div className="alerts-clear">
           <CheckCircle2 size={17} />
-          当前范围无活动告警
+          {lang === 'en' ? 'No active alerts in current scope' : '当前范围无活动告警'}
         </div>
       ) : (
         items.map((item) => (
@@ -448,11 +495,14 @@ export function AlertList({ props }: { props: Data }) {
             <AlertTriangle size={16} />
             <div>
               <div className="alert-title">
-                <h4>{text(item.title)}</h4>
-                <span>{text(item.time)}</span>
+                <strong>{text(item.title)}</strong>
+                <Badge value={item.severity} />
               </div>
-              <p>{text(item.detail)}</p>
-              <span className="alert-device">{text(item.device)}</span>
+              <p>{text(item.message)}</p>
+              <div className="alert-meta">
+                <span>{text(item.source)}</span>
+                <time>{text(item.time)}</time>
+              </div>
             </div>
           </article>
         ))

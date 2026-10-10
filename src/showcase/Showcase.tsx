@@ -10,24 +10,28 @@ import {
   Code2,
   ExternalLink,
   Github,
+  Globe,
   Layers3,
   Maximize2,
   Menu,
   X,
 } from 'lucide-react';
 import { MechanismLab } from './MechanismLab';
-import { COMPONENT_COUNT, lessons, REPO, sourceLink, stages } from './lessons';
+import { COMPONENT_COUNT, getLessons, getStages, REPO, sourceLink } from './lessons';
+import { I18nProvider, useI18n } from '../i18n';
 import '../styles.css';
 
 function Brand() {
+  const { t } = useI18n();
   return (
-    <a className="s-brand" href="#top" aria-label="Intelligent UI 机制实验室首页">
+    <a className="s-brand" href="#top" aria-label={t.brand.ariaHome}>
       <span className="s-brand-symbol" aria-hidden="true">
         <Layers3 size={24} strokeWidth={1.7} />
       </span>
       <span>
-        intelligent<span className="s-brand-light">ui</span>
-        <small>机制实验室</small>
+        {t.brand.title}
+        <span className="s-brand-light">ui</span>
+        <small>{t.brand.sub}</small>
       </span>
     </a>
   );
@@ -37,11 +41,14 @@ function ArchitectureDiagram({
   selected,
   onSelect,
   flat,
+  stages,
 }: {
   selected: number;
   onSelect: (n: number) => void;
   flat: boolean;
+  stages: ReturnType<typeof getStages>;
 }) {
+  const { t } = useI18n();
   const positions = [
     [32, 73],
     [268, 73],
@@ -54,7 +61,7 @@ function ArchitectureDiagram({
       className="s-architecture-svg"
       viewBox="0 0 976 366"
       role="group"
-      aria-label="交互式架构图：选择各层查看职责"
+      aria-label={t.diagram.ariaLabel}
     >
       <defs>
         <pattern id="diagram-dots" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -103,19 +110,19 @@ function ArchitectureDiagram({
       />
       <g className="s-svg-micro" fill="#6d7d74">
         <text x="248" y="107" textAnchor="middle">
-          DSL
+          {t.diagram.dsl}
         </text>
         <text x="484" y="107" textAnchor="middle">
-          IR
+          {t.diagram.ir}
         </text>
         <text x="720" y="107" textAnchor="middle" fontSize="7">
-          UI OPS
+          {t.diagram.uiOps}
         </text>
         <text x="603" y="291">
-          独立数据输入
+          {t.diagram.dataFeed}
         </text>
         <text x="709" y="244" textAnchor="middle" fill="#a37658">
-          处理器 ID + 事件值
+          {t.diagram.handlerId}
         </text>
       </g>
       {stages.map((stage, n) => {
@@ -191,7 +198,7 @@ function ArchitectureDiagram({
               </>
             )}
             <text className="s-svg-micro" x={x} y={y - (flat ? 12 : 32)} fill="#557367">
-              0{n + 1} / {n === 4 ? 'DATA LANE' : 'EXECUTION LAYER'}
+              0{n + 1} / {n === 4 ? t.diagram.dataLane : t.diagram.execLayer}
             </text>
           </g>
         );
@@ -200,22 +207,28 @@ function ArchitectureDiagram({
   );
 }
 
-export default function Showcase() {
+function ShowcaseContent() {
+  const { t, lang, toggleLang } = useI18n();
+  const lessons = getLessons(lang);
+  const stages = getStages(lang);
+
   const [chapter, setChapter] = useState(() =>
     Math.max(
       0,
       lessons.findIndex((item) => `#${item.id}` === window.location.hash),
     ),
   );
-  const [selected, setSelected] = useState(lessons[chapter].node as number);
+  const [selected, setSelected] = useState(lessons[chapter]?.node ?? 0);
   const [flat, setFlat] = useState(false);
   const [menu, setMenu] = useState(false);
   const [demoLoaded, setDemoLoaded] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
-  const lesson = lessons[chapter];
-  const stage = stages[selected];
+
+  const lesson = lessons[chapter] ?? lessons[0];
+  const stage = stages[selected] ?? stages[0];
   const demoUrl = `${import.meta.env.BASE_URL}demo/`;
+
   function choose(index: number, scroll = false) {
     setChapter(index);
     setSelected(lessons[index].node);
@@ -223,6 +236,7 @@ export default function Showcase() {
     if (scroll)
       document.getElementById('learn')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
   useEffect(() => {
     const sync = () => {
       const index = lessons.findIndex((item) => `#${item.id}` === location.hash);
@@ -233,17 +247,18 @@ export default function Showcase() {
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
-  }, []);
+  }, [lessons]);
+
   return (
     <div className="s-site" id="top">
       <a className="s-skip" href="#learn">
-        跳到交互实验
+        {t.nav.skip}
       </a>
       <header className="s-header s-container">
         <Brand />
         <button
           className="s-mobile-toggle"
-          aria-label={menu ? '关闭导航' : '打开导航'}
+          aria-label={menu ? t.nav.menuClose : t.nav.menuOpen}
           aria-expanded={menu}
           onClick={() => setMenu(!menu)}
         >
@@ -251,74 +266,89 @@ export default function Showcase() {
         </button>
         <nav className={menu ? 'is-open' : ''} aria-label="页面导航">
           <a href="#learn" onClick={() => setMenu(false)}>
-            机制与实验
+            {t.nav.mechanisms}
           </a>
           <a href="#demo" onClick={() => setMenu(false)}>
-            完整 Demo
+            {t.nav.demo}
           </a>
           <a href="#about" onClick={() => setMenu(false)}>
-            实现说明
+            {t.nav.about}
           </a>
+          <button
+            className="s-mobile-lang"
+            onClick={() => {
+              toggleLang();
+              setMenu(false);
+            }}
+          >
+            <Globe size={15} />
+            <span>{t.nav.switchLangName}</span>
+          </button>
         </nav>
-        <a className="s-github" href={REPO} target="_blank" rel="noreferrer">
-          <Github size={16} />
-          GitHub
-          <ArrowUpRight size={14} />
-        </a>
+        <div className="s-header-actions">
+          <button
+            className="s-lang-toggle"
+            onClick={toggleLang}
+            aria-label={t.nav.toggleLang}
+            title={t.nav.toggleLang}
+          >
+            <Globe size={15} />
+            <span>{t.nav.switchLangName}</span>
+          </button>
+          <a className="s-github" href={REPO} target="_blank" rel="noreferrer">
+            <Github size={16} />
+            {t.nav.github}
+            <ArrowUpRight size={14} />
+          </a>
+        </div>
       </header>
 
       <main>
         <section className="s-hero s-container" aria-labelledby="hero-title">
           <div>
             <div className="s-eyebrow">
-              <span className="s-status-dot" /> AN INTERACTIVE FIELD GUIDE{' '}
-              <span className="s-hero-edition">VOL. 01</span>
+              <span className="s-status-dot" /> {t.hero.eyebrow}{' '}
+              <span className="s-hero-edition">{t.hero.edition}</span>
             </div>
             <h1 id="hero-title">
-              一句话，如何成为
+              {t.hero.titleLine1}
               <br />
-              <span>可交互的界面？</span>
+              <span>{t.hero.titleHighlight}</span>
             </h1>
-            <p className="s-hero-description">
-              拆开 Intelligent UI 背后的每一层。
-              <br />
-              从模型描述到本地交互，一边理解，一边运行。
-            </p>
+            <p className="s-hero-description">{t.hero.description}</p>
             <div className="s-hero-actions">
               <a className="s-primary" href="#learn">
-                开始探索
+                {t.hero.startExplore}
                 <ArrowDown size={16} />
               </a>
               <a className="s-text-link" href="#demo">
-                直接试用 POC
+                {t.hero.tryDemo}
                 <ArrowUpRight size={15} />
               </a>
             </div>
           </div>
           <div className="s-hero-note">
             <div className="s-note-top">
-              <span>THE KEY IDEA</span>
+              <span>{t.hero.keyIdea}</span>
               <span>↗</span>
             </div>
             <h2>
-              生成一次，
+              {t.hero.noteTitle1}
               <br />
-              交互多次。
+              {t.hero.noteTitle2}
             </h2>
-            <p>
-              模型生成界面描述之后，状态与计算可以留在浏览器。每次点击，不必都是一次新的模型请求。
-            </p>
+            <p>{t.hero.noteDesc}</p>
             <div className="s-note-loop">
-              <span>用户操作</span>
+              <span>{t.hero.userAction}</span>
               <ArrowRight size={15} />
-              <span>Worker</span>
+              <span>{t.hero.worker}</span>
               <ArrowRight size={15} />
-              <span>界面更新</span>
+              <span>{t.hero.uiUpdate}</span>
               <i />
             </div>
             <div className="s-note-bottom">
               <Code2 size={14} />
-              <span>独立 POC · 源码可读 · 实验可运行</span>
+              <span>{t.hero.noteBottom}</span>
             </div>
           </div>
         </section>
@@ -326,19 +356,17 @@ export default function Showcase() {
         <div className="s-intro-strip s-container">
           <span>
             <BookOpen size={15} />
-            六个章节，一条完整链路
+            {t.strip.sixLessons}
           </span>
-          <span>
-            DIAGRAMS <i /> LIVE EXPERIMENTS <i /> SOURCE CODE
-          </span>
+          <span>{t.strip.middle}</span>
           <a href="#learn">
-            SCROLL TO EXPLORE <ArrowDown size={12} />
+            {t.strip.scrollExplore} <ArrowDown size={12} />
           </a>
         </div>
 
         <section className="s-workbench s-container" id="learn" aria-label="机制教学与交互实验">
           <aside className="s-chapters">
-            <div className="s-chapter-label">EXPLORE THE SYSTEM</div>
+            <div className="s-chapter-label">{t.chapters.title}</div>
             <nav aria-label="机制章节">
               {lessons.map((item, index) => (
                 <button
@@ -355,14 +383,14 @@ export default function Showcase() {
             <div className="s-sidebar-note">
               <span className="s-status-dot" />
               <p>
-                图解负责解释，
+                {t.chapters.sidebarNote1}
                 <br />
-                实验负责验证。
+                {t.chapters.sidebarNote2}
               </p>
               <span>
-                点击图中任意一层
+                {t.chapters.sidebarNoteSub1}
                 <br />
-                查看它的输入与输出。
+                {t.chapters.sidebarNoteSub2}
               </span>
             </div>
             <a
@@ -371,16 +399,17 @@ export default function Showcase() {
               target="_blank"
               rel="noreferrer"
             >
-              阅读架构文档
+              {t.chapters.readDoc}
               <ArrowUpRight size={13} />
             </a>
           </aside>
           <div className="s-lesson-content">
             <div className="s-lesson-topline">
               <span>
-                CHAPTER 0{chapter + 1} <i>/</i> {lesson.eyebrow}
+                {t.chapters.chapterPrefix}
+                {chapter + 1} <i>/</i> {lesson.eyebrow}
               </span>
-              <span>LEARN BY DOING</span>
+              <span>{t.chapters.learnByDoing}</span>
             </div>
             <h2 className="s-lesson-title">{lesson.name}</h2>
             <p className="s-lesson-description">{lesson.description}</p>
@@ -390,23 +419,28 @@ export default function Showcase() {
                 <div className="s-diagram-legend">
                   <span>
                     <i />
-                    程序 / 数据
+                    {t.diagram.legendData}
                   </span>
                   <span>
                     <i />
-                    本地事件
+                    {t.diagram.legendEvent}
                   </span>
                 </div>
-                <div className="s-segment" aria-label="架构图视角">
+                <div className="s-segment" aria-label={t.diagram.viewAngle}>
                   <button aria-pressed={!flat} onClick={() => setFlat(false)}>
-                    2.5D
+                    {t.diagram.view25D}
                   </button>
                   <button aria-pressed={flat} onClick={() => setFlat(true)}>
-                    平面
+                    {t.diagram.viewFlat}
                   </button>
                 </div>
               </div>
-              <ArchitectureDiagram selected={selected} onSelect={setSelected} flat={flat} />
+              <ArchitectureDiagram
+                selected={selected}
+                onSelect={setSelected}
+                flat={flat}
+                stages={stages}
+              />
               <div className="s-layer-inspector" aria-live="polite">
                 <div className="s-layer-number">
                   0{selected + 1}
@@ -429,24 +463,25 @@ export default function Showcase() {
               </div>
             </div>
 
-            <MechanismLab key={lesson.id} lesson={lesson.id} />
+            <MechanismLab key={`${lesson.id}-${lang}`} lesson={lesson.id} />
 
             <div className="s-chapter-pagination">
               <button disabled={chapter === 0} onClick={() => choose(chapter - 1, true)}>
                 <ArrowLeft size={15} />
-                上一章
+                {t.chapters.prevChapter}
               </button>
               <span>
                 0{chapter + 1} / 0{lessons.length}
               </span>
               {chapter < lessons.length - 1 ? (
                 <button onClick={() => choose(chapter + 1, true)}>
-                  下一章：{lessons[chapter + 1].short}
+                  {t.chapters.nextChapter}
+                  {lessons[chapter + 1].short}
                   <ArrowRight size={15} />
                 </button>
               ) : (
                 <a href="#demo">
-                  进入完整 Demo
+                  {t.chapters.enterDemo}
                   <ArrowRight size={15} />
                 </a>
               )}
@@ -457,19 +492,15 @@ export default function Showcase() {
         <section className="s-demo-section" id="demo" aria-labelledby="demo-title">
           <div className="s-container">
             <div className="s-section-label">
-              FROM MECHANISM TO APPLICATION <span>把刚才学到的，放进一个完整场景。</span>
+              {t.demo.sectionLabel} <span>{t.demo.sectionSub}</span>
             </div>
             <div className="s-demo-heading">
               <div>
-                <h2 id="demo-title">现在，亲手试一遍。</h2>
-                <p>
-                  同一套编译器和运行时，驱动一个机架监控 POC。
-                  <br />
-                  生成界面、点选设备、调整阈值，再打开开发者面板，看见每一次状态与操作。
-                </p>
+                <h2 id="demo-title">{t.demo.title}</h2>
+                <p>{t.demo.desc}</p>
               </div>
               <a className="s-control" href={demoUrl} target="_blank" rel="noreferrer">
-                独立打开 Demo
+                {t.demo.openExternal}
                 <ExternalLink size={15} />
               </a>
             </div>
@@ -480,9 +511,9 @@ export default function Showcase() {
                   <i />
                   <i />
                 </span>
-                <span>INTELLIGENT UI / PLAYGROUND</span>
+                <span>{t.demo.windowTitle}</span>
                 <button
-                  aria-label="全屏试用 Demo"
+                  aria-label={t.demo.fullscreen}
                   onClick={() => {
                     if (demoRef.current?.requestFullscreen)
                       void demoRef.current
@@ -496,14 +527,14 @@ export default function Showcase() {
               </div>
               <div className="s-demo-disclosure">
                 <span>
-                  <span className="s-status-dot" /> 浏览器演示 · 无需 API Key
+                  <span className="s-status-dot" /> {t.demo.browserDemoBadge}
                 </span>
-                <span>Dell Private Cloud 场景 / 模拟遥测与预置模板</span>
+                <span>{t.demo.scenarioBadge}</span>
               </div>
-              {!demoLoaded && <div className="s-demo-loading">正在加载试用界面…</div>}
+              {!demoLoaded && <div className="s-demo-loading">{t.demo.loading}</div>}
               <iframe
                 src={demoUrl}
-                title="Intelligent UI 完整 POC 在线试用：机架、GPU 与网络监控"
+                title={t.demo.iframeTitle}
                 loading="lazy"
                 onLoad={() => setDemoLoaded(true)}
                 allow="clipboard-write; fullscreen"
@@ -511,91 +542,82 @@ export default function Showcase() {
             </div>
             {fullscreenError && (
               <p className="s-footnote" role="status">
-                当前浏览器不支持全屏，请使用「独立打开 Demo」。
+                {t.demo.fullscreenError}
               </p>
             )}
             <div className="s-demo-guide">
               <span>
-                <b>01</b>选择一个预置场景
+                <b>01</b>
+                {t.demo.step1}
               </span>
               <ChevronRight size={13} />
               <span>
-                <b>02</b>调整控件，观察联动
+                <b>02</b>
+                {t.demo.step2}
               </span>
               <ChevronRight size={13} />
               <span>
-                <b>03</b>打开开发者面板，检查状态
+                <b>03</b>
+                {t.demo.step3}
               </span>
             </div>
-            <p className="s-demo-limit">
-              公开试用在浏览器内模拟流式 API，并运行真实编译器与
-              Worker；不调用模型，也不连接实际设备。自由生成请下载源码，在本地配置模型服务。
-            </p>
+            <p className="s-demo-limit">{t.demo.limitNote}</p>
           </div>
         </section>
 
         <section className="s-about s-container" id="about" aria-labelledby="about-title">
           <div>
-            <div className="s-section-label">READ THE IMPLEMENTATION</div>
+            <div className="s-section-label">{t.about.sectionLabel}</div>
             <h2 id="about-title">
-              原理可以拆开，
+              {t.about.titleLine1}
               <br />
-              实现也可以。
+              {t.about.titleLine2}
             </h2>
-            <p>
-              这是一份独立的生成式 UI 概念验证。所有实验都能回到对应源码，继续验证、修改和扩展。
-            </p>
+            <p>{t.about.desc}</p>
             <a className="s-primary" href={REPO} target="_blank" rel="noreferrer">
               <Github size={16} />
-              查看 GitHub 源码
+              {t.about.viewGithub}
               <ArrowUpRight size={15} />
             </a>
           </div>
           <div className="s-about-details">
-            <h3>这份 POC 实现了什么</h3>
+            <h3>{t.about.pocIncludesTitle}</h3>
             <ul>
               <li>
                 <Check size={15} />
-                受限 DSL、容错编译器与 {COMPONENT_COUNT} 种注册组件
+                {t.about.pocIncludes1(COMPONENT_COUNT)}
               </li>
               <li>
                 <Check size={15} />
-                Worker 内的 AST 解释、状态与组件树差异
+                {t.about.pocIncludes2}
               </li>
               <li>
                 <Check size={15} />
-                独立 appData、显式 action 与本地模型适配入口
+                {t.about.pocIncludes3}
               </li>
             </ul>
             <details>
               <summary>
-                与参考机制有哪些区别？
+                {t.about.diffSummary}
                 <ChevronRight size={15} />
               </summary>
-              <p>
-                这里的编译产物是 JSON IR，Worker 消息使用结构化数据。没有复刻 ChatGPT 的完整
-                DIL、二进制协议、跨域执行沙箱或 AppBlock。页面实验用于解释本项目的实现，不代表
-                ChatGPT 内部架构或官方产品能力。
-              </p>
+              <p>{t.about.diffContent}</p>
             </details>
             <details>
               <summary>
-                状态、数据和安全边界
+                {t.about.securitySummary}
                 <ChevronRight size={15} />
               </summary>
-              <p>
-                状态可跨同一回复的重编译保留，刷新后重置。遥测为固定模拟数据。白名单和 Worker
-                并不替代生产环境的鉴权、数据校验与运行隔离；项目当前定位为概念验证。
-              </p>
+              <p>{t.about.securityContent}</p>
             </details>
             <div className="s-references">
-              <span>延伸阅读 / 灵感来源</span>
+              <span>{t.about.references}</span>
               <a
                 href="https://www.openui.com/blog/how-chatgpt-intelligent-ui-works"
                 target="_blank"
                 rel="noreferrer"
               >
-                OpenUI · How ChatGPT Intelligent UI works
+                {t.about.ref1}
                 <ArrowUpRight size={13} />
               </a>
               <a
@@ -603,7 +625,7 @@ export default function Showcase() {
                 target="_blank"
                 rel="noreferrer"
               >
-                参考：ChatGPT 智能 UI · 机制观察室
+                {t.about.ref2}
                 <ArrowUpRight size={13} />
               </a>
             </div>
@@ -612,12 +634,20 @@ export default function Showcase() {
       </main>
       <footer className="s-footer s-container">
         <Brand />
-        <p>Understand the system. Then make it your own.</p>
+        <p>{t.footer.tagline}</p>
         <a href="#top">
-          回到顶部
+          {t.footer.backToTop}
           <ArrowUpRight size={14} />
         </a>
       </footer>
     </div>
+  );
+}
+
+export default function Showcase() {
+  return (
+    <I18nProvider>
+      <ShowcaseContent />
+    </I18nProvider>
   );
 }

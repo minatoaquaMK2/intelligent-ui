@@ -464,6 +464,25 @@ small {
   background: #ebf1f5;
   color: var(--purple);
 }
+.app-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #dfe5e9;
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #616c73;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.app-lang-toggle:hover {
+  background: #edf4f9;
+  color: var(--purple);
+  border-color: #d1e5f3;
+}
 .inspector-toggle {
   display: flex;
   align-items: center;

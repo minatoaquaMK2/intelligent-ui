@@ -13,37 +13,12 @@ import {
   X,
 } from 'lucide-react';
 import type { Turn } from '../lib/models';
+import { useI18n } from '../i18n';
 
-export function CodeBlock({ code }: { code: string }) {
+function CodeBlock({ code }: { code: string }) {
   return (
-    <pre className="code-block">
-      <code>
-        {code.split('\n').map((line, index) => (
-          <div className="code-line" key={index}>
-            <span className="line-number" aria-hidden="true">
-              {index + 1}
-            </span>
-            <span>
-              {line.split(/("[^"]*"|<\/?[\w]+|\{@\w+|\b(?:true|false|null)\b)/g).map((token, i) => (
-                <span
-                  key={i}
-                  className={
-                    token.startsWith('"')
-                      ? 'code-string'
-                      : token.startsWith('<') || token.startsWith('{@')
-                        ? 'code-keyword'
-                        : /^(true|false|null)$/.test(token)
-                          ? 'code-value'
-                          : ''
-                  }
-                >
-                  {token}
-                </span>
-              ))}
-            </span>
-          </div>
-        ))}
-      </code>
+    <pre className="code-block" tabIndex={0}>
+      <code>{code}</code>
     </pre>
   );
 }
@@ -59,24 +34,28 @@ export function Inspector({
   onCompile: (source: string) => Promise<void>;
   notify: (message: string) => void;
 }) {
+  const { t } = useI18n();
   const [tab, setTab] = useState('source');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [compiling, setCompiling] = useState(false);
+
   const tabs = [
-    { id: 'source', label: '源码', icon: Code2 },
-    { id: 'runtime', label: '运行时', icon: Braces },
-    { id: 'data', label: '数据', icon: Database },
-    { id: 'events', label: '事件', icon: Radio },
+    { id: 'source', label: t.inspector.tabSource, icon: Code2 },
+    { id: 'runtime', label: t.inspector.tabRuntime, icon: Braces },
+    { id: 'data', label: t.inspector.tabData, icon: Database },
+    { id: 'events', label: t.inspector.tabEvents, icon: Radio },
   ];
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(turn?.source ?? '');
-      notify('DSL 已复制');
+      notify(t.inspector.copiedDsl);
     } catch {
-      notify('无法访问剪贴板，请手动复制');
+      notify(t.inspector.copyError);
     }
   };
+
   const run = async () => {
     setCompiling(true);
     try {
@@ -88,19 +67,20 @@ export function Inspector({
       setCompiling(false);
     }
   };
+
   return (
-    <aside className="inspector" aria-label="开发者面板">
+    <aside className="inspector" aria-label={t.inspector.title}>
       <div className="inspector-heading">
         <div>
           <ScanLine size={17} />
-          <strong>开发者面板</strong>
+          <strong>{t.inspector.title}</strong>
           <span>INSPECTOR</span>
         </div>
-        <button className="icon-button" aria-label="关闭开发者面板" onClick={onClose}>
+        <button className="icon-button" aria-label={t.inspector.close} onClick={onClose}>
           <X size={17} />
         </button>
       </div>
-      <div className="inspector-tabs" role="tablist" aria-label="检查内容">
+      <div className="inspector-tabs" role="tablist" aria-label={t.inspector.tabsAria}>
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -121,19 +101,19 @@ export function Inspector({
           <div>
             <FileCode2 size={30} />
           </div>
-          <h3>看看界面背后发生了什么</h3>
-          <p>生成一个界面，查看 DSL 源码、编译结果、Worker 状态与真实事件。</p>
-          <span>每一步，都可以观察。</span>
+          <h3>{t.inspector.emptyTitle}</h3>
+          <p>{t.inspector.emptyDesc}</p>
+          <span>{t.inspector.emptyFooter}</span>
         </div>
       ) : (
         <div className="inspector-body" role="tabpanel">
           <div className="inspector-status">
             <span className={`status-dot ${turn.status === 'streaming' ? 'pulsing' : ''}`} />
             {turn.status === 'streaming'
-              ? '正在接收流式响应'
+              ? t.inspector.statusStreaming
               : turn.status === 'error'
-                ? '响应遇到错误'
-                : '运行时就绪'}
+                ? t.inspector.statusError
+                : t.inspector.statusReady}
             <code>dil-poc / v1</code>
           </div>
           {tab === 'source' && (
@@ -151,9 +131,13 @@ export function Inspector({
                       setDraft(turn.source);
                     }}
                   >
-                    {editing ? '取消' : '编辑'}
+                    {editing ? t.inspector.cancel : t.inspector.edit}
                   </button>
-                  <button title="复制 DSL" aria-label="复制 DSL" onClick={copy}>
+                  <button
+                    title={t.inspector.copyDsl}
+                    aria-label={t.inspector.copyDsl}
+                    onClick={copy}
+                  >
                     <Copy size={13} />
                   </button>
                 </div>
@@ -161,28 +145,28 @@ export function Inspector({
               {editing ? (
                 <div className="source-editor">
                   <textarea
-                    aria-label="编辑 DSL 源码"
+                    aria-label={t.inspector.editDslAria}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     spellCheck={false}
                   />
                   <button className="small-primary" disabled={compiling} onClick={() => void run()}>
                     <Play size={13} />
-                    {compiling ? '编译中…' : '编译并应用'}
+                    {compiling ? t.inspector.compiling : t.inspector.compileAndApply}
                   </button>
-                  <p>沿用相同名称的状态；修改初始值不会重置已调整的状态。</p>
+                  <p>{t.inspector.editNote}</p>
                 </div>
               ) : (
-                <CodeBlock code={turn.source || '// 等待第一个片段…'} />
+                <CodeBlock code={turn.source || t.inspector.waitingFirstChunk} />
               )}
               <div className="diagnostics">
                 <h4>
                   {turn.compilation?.diagnostics.length ? (
-                    '编译诊断'
+                    t.inspector.diagnosticsTitle
                   ) : (
                     <>
                       <Check size={14} />
-                      组件校验通过
+                      {t.inspector.componentsPassed}
                     </>
                   )}
                 </h4>
@@ -197,7 +181,7 @@ export function Inspector({
                 ))}
               </div>
               <details className="inspector-details">
-                <summary>查看编译后的程序 IR</summary>
+                <summary>{t.inspector.viewIrSummary}</summary>
                 <CodeBlock code={JSON.stringify(turn.compilation?.program ?? {}, null, 2)} />
               </details>
             </>
@@ -206,21 +190,21 @@ export function Inspector({
             <>
               <div className="runtime-metrics">
                 <div>
-                  <span>模型调用</span>
+                  <span>{t.inspector.modelCalls}</span>
                   <strong>
                     {turn.modelCalls}
-                    <small>次</small>
+                    <small>{t.inspector.timesUnit}</small>
                   </strong>
                 </div>
                 <div>
-                  <span>本地交互</span>
+                  <span>{t.inspector.localInteractions}</span>
                   <strong>
                     {turn.interactions}
-                    <small>次</small>
+                    <small>{t.inspector.timesUnit}</small>
                   </strong>
                 </div>
                 <div>
-                  <span>本次计算</span>
+                  <span>{t.inspector.duration}</span>
                   <strong>
                     {(turn.report?.duration ?? 0).toFixed(2)}
                     <small>ms</small>
@@ -229,7 +213,7 @@ export function Inspector({
               </div>
               <div className="inspector-section">
                 <h4>
-                  KEYED STATE <span>Worker 内的当前值</span>
+                  {t.inspector.keyedStateTitle} <span>{t.inspector.keyedStateSub}</span>
                 </h4>
                 {Object.keys(turn.report?.state ?? {}).length ? (
                   <div className="state-list">
@@ -245,25 +229,26 @@ export function Inspector({
                     ))}
                   </div>
                 ) : (
-                  <p className="muted-small">程序还没有声明状态。</p>
+                  <p className="muted-small">{t.inspector.noState}</p>
                 )}
               </div>
               <div className="inspector-section">
                 <h4>
-                  RENDER OPERATIONS <span>累计 {turn.operationCount} 条</span>
+                  {t.inspector.renderOpsTitle}{' '}
+                  <span>{t.inspector.renderOpsCount(turn.operationCount)}</span>
                 </h4>
-                <p className="muted-small">最近一次产生界面变化的操作。调整控件观察 SET 更新。</p>
+                <p className="muted-small">{t.inspector.renderOpsDesc}</p>
                 <CodeBlock
                   code={
                     turn.lastOperations.length
                       ? turn.lastOperations.map((op) => JSON.stringify(op)).join('\n')
-                      : '// 尚无界面变化'
+                      : t.inspector.noUiChanges
                   }
                 />
               </div>
               {!!turn.report?.diagnostics.length && (
                 <div className="diagnostics">
-                  <h4>运行时诊断</h4>
+                  <h4>{t.inspector.runtimeDiagnostics}</h4>
                   {turn.report.diagnostics.map((message, i) => (
                     <div className="diagnostic-warning" key={i}>
                       {message}
@@ -273,7 +258,7 @@ export function Inspector({
               )}
               <div className="runtime-note">
                 <Terminal size={15} />
-                <p>状态更新与树差异计算都在 Web Worker 内完成。组件事件只回传处理器 ID 和参数。</p>
+                <p>{t.inspector.runtimeNote}</p>
               </div>
             </>
           )}
@@ -281,14 +266,16 @@ export function Inspector({
             <>
               <div className="inspector-section">
                 <h4>
-                  APP DATA <span>服务端独立传入 · 模拟数据</span>
+                  {t.inspector.appDataTitle} <span>{t.inspector.appDataSub}</span>
                 </h4>
-                <p className="muted-small">DSL 通过 data.* 引用。数据不需要由模型重写。</p>
+                <p className="muted-small">{t.inspector.appDataDesc}</p>
                 <CodeBlock code={JSON.stringify(turn.appData, null, 2)} />
               </div>
               <details className="inspector-details">
                 <summary>
-                  文本常量 · {Object.keys(turn.compilation?.constants ?? {}).length} 项
+                  {t.inspector.constantsTitle(
+                    Object.keys(turn.compilation?.constants ?? {}).length,
+                  )}
                 </summary>
                 <CodeBlock code={JSON.stringify(turn.compilation?.constants ?? {}, null, 2)} />
               </details>
@@ -298,9 +285,10 @@ export function Inspector({
             <>
               <div className="inspector-section">
                 <h4>
-                  EVENT STREAM <span>{turn.chunks} 个流式片段</span>
+                  {t.inspector.eventStreamTitle}{' '}
+                  <span>{t.inspector.eventStreamChunks(turn.chunks)}</span>
                 </h4>
-                <p className="muted-small">记录最近 100 条编译、数据与交互事件。</p>
+                <p className="muted-small">{t.inspector.eventStreamDesc}</p>
               </div>
               <div className="event-list">
                 {[...turn.events].reverse().map((event) => (
@@ -319,7 +307,8 @@ export function Inspector({
       )}
       <div className="inspector-footer">
         <span className="status-dot" />
-        受限表达式解释器<span>无 eval · 无动态代码</span>
+        {t.inspector.sandboxedEval}
+        <span>{t.inspector.noDynamicCode}</span>
       </div>
     </aside>
   );

@@ -3,18 +3,25 @@ import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Play, RotateCcw, Square } 
 import { compile } from '../core/compiler';
 import { LiveInterface } from '../components/LiveInterface';
 import type { Compilation, RuntimeResult } from '../core/types';
+import { useI18n } from '../i18n';
 import {
   fixtureA,
   fixtureB,
-  labSource,
-  lessons,
-  streamBase,
-  streamSources,
+  getLabSource,
+  getLessons,
+  getStreamBase,
+  getStreamSources,
   type LessonId,
 } from './lessons';
 
 export function MechanismLab({ lesson }: { lesson: LessonId }) {
-  const info = lessons.find((item) => item.id === lesson)!;
+  const { lang, t } = useI18n();
+  const lessons = getLessons(lang);
+  const info = lessons.find((item) => item.id === lesson) ?? lessons[0];
+  const currentLabSource = getLabSource(lang);
+  const currentStreamSources = getStreamSources(lang);
+  const currentStreamBase = getStreamBase(lang);
+
   const [tab, setTab] = useState('source');
   const [variant, setVariant] = useState(0);
   const [revision, setRevision] = useState(0);
@@ -27,18 +34,22 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
   const [partial, setPartial] = useState('');
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   useEffect(() => () => clearInterval(timer.current), []);
+
   const source =
     lesson === 'streaming'
       ? streaming
         ? partial
-        : streamSources[variant]
+        : currentStreamSources[variant]
       : lesson === 'boundary'
         ? [
-            labSource,
-            labSource + '\n<unknownWidget label="未知组件" />',
-            labSource + '\n<text>{window.location.href}</text>',
+            currentLabSource,
+            currentLabSource +
+              `\n<unknownWidget label="${lang === 'en' ? 'Unknown Widget' : '未知组件'}" />`,
+            currentLabSource + '\n<text>{window.location.href}</text>',
           ][variant]
-        : labSource + (revision ? `\n<caption>已重新编译 ${revision} 次</caption>` : '');
+        : currentLabSource +
+          (revision ? `\n<caption>${t.lab.recompileCount(revision)}</caption>` : '');
+
   const compilation = useMemo(() => compile(source), [source]);
   const appData = lesson === 'data' && variant === 1 ? fixtureB : fixtureA;
   const previous = useRef<Compilation | undefined>(undefined);
@@ -57,17 +68,19 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
     setStreaming(false);
     setVariant(2);
   }
+
   function play() {
     clearInterval(timer.current);
-    setPartial(streamBase);
+    setPartial(currentStreamBase);
     setStreaming(true);
-    let position = streamBase.length;
+    let position = currentStreamBase.length;
     timer.current = setInterval(() => {
       position += 5;
-      setPartial(streamSources[2].slice(0, position));
-      if (position >= streamSources[2].length) stop();
+      setPartial(currentStreamSources[2].slice(0, position));
+      if (position >= currentStreamSources[2].length) stop();
     }, 70);
   }
+
   const content =
     tab === 'source'
       ? source
@@ -92,10 +105,11 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
               null,
               2,
             );
+
   return (
     <section className="s-lab" aria-labelledby="experiment-title">
       <div className="s-section-label">
-        <span className="s-status-dot" /> TRY IT YOURSELF <span>真实编译器 · 真实 Worker</span>
+        <span className="s-status-dot" /> {t.lab.tryItYourself} <span>{t.lab.badgeSubtitle}</span>
       </div>
       <div className="s-lab-heading">
         <div>
@@ -104,8 +118,8 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         </div>
         <button
           className="s-icon-button"
-          aria-label="重置当前实验"
-          title="重置当前实验"
+          aria-label={t.lab.resetLab}
+          title={t.lab.resetLab}
           onClick={() => {
             clearInterval(timer.current);
             setStreaming(false);
@@ -123,13 +137,13 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         {lesson === 'state' && (
           <button className="s-control" onClick={() => setRevision((n) => n + 1)}>
             <Code2 size={15} />
-            重新编译 · 保留状态
+            {t.lab.recompileKeepState}
           </button>
         )}
         {lesson === 'streaming' && (
           <>
-            <div className="s-segment" aria-label="源码阶段">
-              {['文字增长', '未完成标签', '完整组件'].map((name, i) => (
+            <div className="s-segment" aria-label={t.lab.phaseSource}>
+              {[t.lab.textGrowing, t.lab.incompleteTag, t.lab.completeComponent].map((name, i) => (
                 <button
                   key={name}
                   aria-pressed={variant === i && !streaming}
@@ -145,13 +159,13 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             </div>
             <button className="s-control" onClick={streaming ? stop : play}>
               {streaming ? <Square size={13} /> : <Play size={13} />}
-              {streaming ? '结束播放' : '播放流式编译'}
+              {streaming ? t.lab.stopStream : t.lab.playStream}
             </button>
           </>
         )}
         {lesson === 'data' && (
-          <div className="s-segment" aria-label="模拟数据">
-            {['快照 A · 68 / 79 / 86°C', '快照 B · 83 / 88 / 92°C'].map((name, i) => (
+          <div className="s-segment" aria-label={t.lab.simData}>
+            {[t.lab.snapshotA, t.lab.snapshotB].map((name, i) => (
               <button
                 key={name}
                 aria-pressed={variant === i}
@@ -166,8 +180,8 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           </div>
         )}
         {lesson === 'boundary' && (
-          <div className="s-segment" aria-label="校验案例">
-            {['合法表达式', '未知组件', '访问 window'].map((name, i) => (
+          <div className="s-segment" aria-label={t.lab.validationCases}>
+            {[t.lab.validExpr, t.lab.unknownWidget, t.lab.accessWindow].map((name, i) => (
               <button
                 key={name}
                 aria-pressed={variant === i}
@@ -182,17 +196,17 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           </div>
         )}
         <span className="s-lab-mode">
-          {lesson === 'streaming' ? `本次更新：${update}` : '预置源码 · 无模型请求'}
+          {lesson === 'streaming' ? t.lab.latestUpdate(update) : t.lab.presetSourceMode}
         </span>
       </div>
       <div className="s-experiment-grid">
         <div className="s-code-panel">
           <div className="s-code-tabs" role="tablist" aria-label="查看中间产物">
             {[
-              ['source', 'DSL 源码'],
-              ['compiled', '编译产物'],
-              ['data', 'appData'],
-              ['runtime', '状态 / 操作'],
+              ['source', t.lab.tabs.source],
+              ['compiled', t.lab.tabs.compiled],
+              ['data', t.lab.tabs.data],
+              ['runtime', t.lab.tabs.runtime],
             ].map(([id, title]) => (
               <button
                 id={`artifact-tab-${id}`}
@@ -207,14 +221,14 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             ))}
             <button
               className="s-copy"
-              aria-label="复制当前内容"
+              aria-label={t.lab.copyTooltip}
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(content);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1600);
                 } catch {
-                  setMessage('浏览器未允许复制；可在代码区选择并复制文本。');
+                  setMessage(t.lab.copyError);
                 }
               }}
             >
@@ -241,7 +255,7 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
               ))
             ) : (
               <span>
-                <Check size={13} /> 编译通过 · {compilation.program.roots.length} 个根节点
+                <Check size={13} /> {t.lab.compiledSuccess(compilation.program.roots.length)}
               </span>
             )}
           </div>
@@ -249,13 +263,13 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         <div className="s-render-panel">
           <div className="s-render-header">
             <span>
-              <span className="s-status-dot" /> LIVE OUTPUT
+              <span className="s-status-dot" /> {t.lab.liveOutput}
             </span>
-            <span>Worker → React</span>
+            <span>{t.lab.workerToReact}</span>
           </div>
           <div className="s-live-output">
             <LiveInterface
-              key={instance}
+              key={`${instance}-${lang}`}
               compilation={compilation}
               appData={appData}
               disabled={false}
@@ -268,13 +282,13 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           </div>
           <div className="s-runtime-stats">
             <span>
-              本地事件 <b>{interactions}</b>
+              {t.lab.localEvents} <b>{interactions}</b>
             </span>
             <span>
-              模型请求 <b>0</b>
+              {t.lab.modelRequests} <b>0</b>
             </span>
             <span>
-              threshold <b>{String(report?.state.threshold ?? '—')}</b>
+              {t.lab.threshold} <b>{String(report?.state.threshold ?? '—')}</b>
             </span>
           </div>
         </div>
@@ -287,32 +301,15 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
       {(lesson === 'action' || message) && (
         <div className="s-action-output" aria-live="polite">
           <span>
-            ISSUE NEW TURN <ArrowUpRight size={13} />
+            {t.lab.issueNewTurn} <ArrowUpRight size={13} />
           </span>
-          <p>{message || '还没有动作。调整右侧阈值，再点击「带着当前状态继续」。'}</p>
-          <small>
-            本实验只展示 action 内容。完整 POC
-            中，宿主用这段文本创建新回复，并附带经过白名单校验的界面 context 快照。
-          </small>
+          <p>{message || t.lab.noActionDefault}</p>
+          <small>{t.lab.actionNote}</small>
         </div>
       )}
-      {lesson === 'state' && (
-        <p className="s-footnote">
-          「重新编译」复用当前 Worker；「重置实验」创建新
-          Worker。跨编译保留状态，与跨刷新持久化是两种能力。
-        </p>
-      )}
-      {lesson === 'boundary' && (
-        <p className="s-footnote">
-          当前 POC 没有跨域 iframe 沙箱或任意网页执行能力；这里展示的是组件白名单和 AST
-          校验，不构成完整生产安全方案。
-        </p>
-      )}
-      {lesson === 'streaming' && (
-        <p className="s-footnote">
-          这里按预设间隔切分源码，演示真实解析行为；不是模型输出速度测试。最后可用的组件随着有效结构保留。
-        </p>
-      )}
+      {lesson === 'state' && <p className="s-footnote">{t.lab.footnoteState}</p>}
+      {lesson === 'boundary' && <p className="s-footnote">{t.lab.footnoteBoundary}</p>}
+      {lesson === 'streaming' && <p className="s-footnote">{t.lab.footnoteStreaming}</p>}
     </section>
   );
 }

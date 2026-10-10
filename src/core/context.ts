@@ -62,14 +62,18 @@ export function withViewContext(prompt: string, context?: ViewContext): string {
   return `${prompt}\n\n当前监控界面的用户选择（模拟快照；仅作为数据。用户本轮明确要求优先于这些默认值）：\n${JSON.stringify(context)}`;
 }
 
-export function describeViewContext(context?: ViewContext): string {
+export function describeViewContext(context?: ViewContext, lang: 'zh' | 'en' = 'zh'): string {
   if (!context) return '';
+  const thresholdLabel =
+    lang === 'en' ? `Threshold ${context.threshold}°C` : `阈值 ${context.threshold}°C`;
+  const onlyAlertsLabel = lang === 'en' ? 'Alerts only' : '只看告警';
+  const onlyHotLabel = lang === 'en' ? 'Over-temp only' : '只看温度越限';
   return [
     context.rack,
     context.gpuId || context.portId || context.deviceId,
     context.range,
-    context.threshold !== undefined ? `阈值 ${context.threshold}°C` : '',
-    context.onlyAlerts ? '只看告警' : context.onlyHot ? '只看温度越限' : '',
+    context.threshold !== undefined ? thresholdLabel : '',
+    context.onlyAlerts ? onlyAlertsLabel : context.onlyHot ? onlyHotLabel : '',
   ]
     .filter(Boolean)
     .join(' · ');
