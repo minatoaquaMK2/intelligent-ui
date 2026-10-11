@@ -467,6 +467,8 @@ small {
 .app-lang-toggle {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   gap: 5px;
   border: 1px solid #dfe5e9;
   border-radius: 6px;
@@ -486,6 +488,8 @@ small {
 .inspector-toggle {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   gap: 7px;
   border: 1px solid #dfe5e9;
   border-radius: 6px;
@@ -644,7 +648,7 @@ small {
 }
 .example-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   gap: 15px;
 }
 .example-card {
@@ -876,7 +880,8 @@ small {
   color: #47555f;
   line-height: 1.8;
   font-size: 12px;
-  min-height: 30px;
+  field-sizing: content;
+  min-height: 2lh;
   max-height: 160px;
 }
 .composer textarea::placeholder {
@@ -2982,6 +2987,30 @@ small {
   }
 }
 @media (max-width: 420px) {
+  .topbar {
+    padding-inline: 12px;
+  }
+  .topbar-actions {
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .breadcrumb strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .breadcrumb .poc-badge {
+    display: none;
+  }
+  .inspector-toggle > span {
+    display: none;
+  }
+  .inspector-toggle {
+    width: 31px;
+    height: 31px;
+    padding: 0;
+    justify-content: center;
+  }
   .welcome-eyebrow > i,
   .welcome-eyebrow > span ~ * {
     display: none;
@@ -3039,6 +3068,7 @@ small {
   }
   .pipeline-strip {
     gap: 8px;
+    flex-wrap: wrap;
   }
   .pipeline-strip > span {
     font-size: 7px;

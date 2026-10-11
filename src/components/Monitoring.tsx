@@ -427,6 +427,15 @@ export function GpuGrid({ props, onSelect }: SelectionProps) {
 export function PortGrid({ props, onSelect }: SelectionProps) {
   const { lang } = useI18n();
   const ports = records(props.ports).slice(0, 64);
+  const speeds = new Map<number, number>();
+  for (const port of ports) {
+    const speed = number(port.speed);
+    if (speed > 0) speeds.set(speed, (speeds.get(speed) ?? 0) + 1);
+  }
+  const speedSummary = [...speeds.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([speed, count]) => `${count} × ${speed} Gbps`)
+    .join(' / ');
   return (
     <div className="port-panel" role="group" aria-label="交换机端口面板">
       <div className="monitor-heading">
@@ -464,8 +473,8 @@ export function PortGrid({ props, onSelect }: SelectionProps) {
       </div>
       <p className="monitor-footnote">
         {lang === 'en'
-          ? '1–44 · 25G / 45–48 · 100G Uplink · Demo config'
-          : '1–44 · 25 Gbps / 45–48 · 100 Gbps 上联 · 演示配置'}
+          ? `${ports.length} ports shown${speedSummary ? ` · ${speedSummary}` : ''} · Demo configuration`
+          : `当前展示 ${ports.length} 个端口${speedSummary ? ` · ${speedSummary}` : ''} · 演示配置`}
       </p>
     </div>
   );

@@ -316,6 +316,24 @@ export interface Translations {
     completeComponent: string;
     playStream: string;
     stopStream: string;
+    resumeStream: string;
+    textStart: string;
+    artifacts: string;
+    noFallback: string;
+    businessScenario: string;
+    scenarios: { rack: string; gpu: string; network: string };
+    observation: string;
+    traceSource: string;
+    traceCompiler: string;
+    traceWorker: string;
+    characters: string;
+    roots: string;
+    diagnostics: string;
+    programStatus: string;
+    programUnchanged: string;
+    patchField: string;
+    evidenceNeedsInteraction: string;
+
     simData: string;
     snapshotA: string;
     snapshotB: string;
@@ -330,6 +348,7 @@ export interface Translations {
       compiled: string;
       data: string;
       runtime: string;
+      fallback: string;
     };
     copyTooltip: string;
     copySuccess: string;

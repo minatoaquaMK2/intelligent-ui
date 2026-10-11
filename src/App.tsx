@@ -100,7 +100,7 @@ function ExampleArt({ type }: { type: Scenario }) {
             </span>
           ))}
         </div>
-        <div className="mini-gpu-foot">
+        <div className="mini-network-caption">
           <span>H100 · SXM5</span>
           <b>≥ 80°C</b>
         </div>
@@ -108,21 +108,18 @@ function ExampleArt({ type }: { type: Scenario }) {
     );
   return (
     <div className="example-art art-network" aria-hidden="true">
-      <div className="mini-switch-title">
+      <div className="mini-gpu-title">
         <Network size={16} />
         <span>TOR SWITCH</span>
         <b>TOR-A01-A</b>
       </div>
-      <div className="mini-switch-ports">
+      <div className="mini-port-cells">
         {Array.from({ length: 24 }, (_, i) => (
-          <span
-            key={i}
-            className={i === 4 ? 'mini-port-down' : i % 3 === 0 ? 'mini-port-active' : ''}
-          />
+          <i key={i} className={i === 4 ? 'mini-down' : ''} />
         ))}
       </div>
-      <div className="mini-switch-foot">
-        <span>48 × 25G</span>
+      <div className="mini-network-caption">
+        <span>44 × 25G · 4 × 100G</span>
         <b>1 LINK DOWN</b>
       </div>
     </div>
@@ -507,7 +504,7 @@ function AppInner() {
 
   const composerView = (
     <form
-      className="composer-form"
+      className="composer composer-form"
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
         void send(prompt);

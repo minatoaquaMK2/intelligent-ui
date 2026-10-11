@@ -145,16 +145,30 @@ export function ArchitectureDiagram({
               strokeWidth={active ? 2.2 : 1.5}
               markerEnd={`url(#${id}-${flow.kind})`}
             />
+          </g>
+        );
+      })}
+      {/* Paint captions after every connector so crossing routes cannot obscure text. */}
+      {scene.edges.map((flow) => {
+        const active = flow.from === selected || flow.to === selected;
+        const x = flow.label[0];
+        const y =
+          flow.label[1] + (flow.label[1] > 350 ? spread : flow.label[1] < 200 ? -spread / 2 : 0);
+        const width = Array.from(flow.text).reduce(
+          (size, char) => size + (/[^\x00-\x7F]/.test(char) ? 12 : 7.2),
+          16,
+        );
+        return (
+          <g key={`caption-${flow.id}`} className="s-flow-caption" aria-hidden="true">
+            <rect x={x - width / 2} y={y - 14} width={width} height="21" rx="4" fill="#f1f4eb" />
             <text
               className="s-flow-label"
-              x={flow.label[0]}
-              y={
-                flow.label[1] +
-                (flow.label[1] > 350 ? spread : flow.label[1] < 200 ? -spread / 2 : 0)
-              }
+              x={x}
+              y={y}
               textAnchor="middle"
-              fill={color}
+              fill={flow.kind === 'program' ? '#50755f' : '#a26540'}
               fontSize="12"
+              opacity={active ? 1 : 0.75}
             >
               {flow.text}
             </text>
@@ -227,22 +241,16 @@ export function ArchitectureDiagram({
               stroke={active ? '#315c48' : '#adbfac'}
               strokeWidth={active ? 2.2 : 1.2}
             />
-            <text
-              x={x + 16}
-              y={y + 36}
-              fill={active ? '#234c3c' : '#3d5a47'}
-              fontSize={node.name.length > 20 ? 14 : 17}
-              fontWeight="600"
-            >
-              {node.name}
-            </text>
-            <text x={x + 16} y={y + 63} fill="#657969" fontSize="10" fontFamily="monospace">
+            <foreignObject x={x + 16} y={y + 13} width="152" height="48" aria-hidden="true">
+              <div className="s-node-title">{node.name}</div>
+            </foreignObject>
+            <text x={x + 16} y={y + 78} fill="#657969" fontSize="10" fontFamily="monospace">
               {node.english}
             </text>
             <circle
               className={active ? 's-node-spark' : ''}
               cx={x + 170}
-              cy={y + 31}
+              cy={y + 75}
               r="3.1"
               fill={active ? '#416e52' : '#c1ceba'}
             />

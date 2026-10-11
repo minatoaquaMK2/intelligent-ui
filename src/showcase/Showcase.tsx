@@ -22,6 +22,7 @@ import { I18nProvider, useI18n } from '../i18n';
 import { MechanismScene } from './MechanismScene';
 import { formatChapterNumber } from './architecture';
 import '../styles.css';
+import '../monitoring.css';
 
 function Brand() {
   const { t } = useI18n();
@@ -53,10 +54,30 @@ function ShowcaseContent() {
   const [demoLoaded, setDemoLoaded] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
+  const chapterNav = useRef<HTMLElement>(null);
 
   const lesson = lessons[chapter] ?? lessons[0];
   const chapterNumber = formatChapterNumber(chapter);
   const demoUrl = `${import.meta.env.BASE_URL}demo/`;
+
+  useEffect(() => {
+    const nav = chapterNav.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!nav || !active) return;
+    const keepChapterVisible = () => {
+      if (nav.scrollWidth <= nav.clientWidth) return;
+      const container = nav.getBoundingClientRect(),
+        item = active.getBoundingClientRect();
+      if (item.left < container.left || item.right > container.right)
+        nav.scrollTo({
+          left: nav.scrollLeft + item.left - container.left - (nav.clientWidth - item.width) / 2,
+        });
+    };
+    keepChapterVisible();
+    const observer = new ResizeObserver(keepChapterVisible);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [chapter, lang]);
 
   function choose(index: number, scroll = false) {
     setChapter(index);
@@ -194,7 +215,7 @@ function ShowcaseContent() {
         <section className="s-workbench s-container" id="learn" aria-label="机制教学与交互实验">
           <aside className="s-chapters">
             <div className="s-chapter-label">{t.chapters.title}</div>
-            <nav aria-label="机制章节">
+            <nav ref={chapterNav} aria-label="机制章节">
               {lessons.map((item, index) => (
                 <button
                   key={item.id}

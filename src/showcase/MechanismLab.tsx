@@ -4,23 +4,20 @@ import { compile } from '../core/compiler';
 import { LiveInterface } from '../components/LiveInterface';
 import type { Compilation, RuntimeResult } from '../core/types';
 import { useI18n } from '../i18n';
+import { getLessons, type LessonId } from './lessons';
 import {
-  fixtureA,
-  fixtureB,
-  getLabSource,
-  getLessons,
-  getStreamBase,
-  getStreamSources,
-  type LessonId,
-} from './lessons';
+  classifyCompilation,
+  getBoundarySource,
+  getExperiment,
+  type EvidenceScenario,
+} from './experiments';
 
 export function MechanismLab({ lesson }: { lesson: LessonId }) {
   const { lang, t } = useI18n();
   const lessons = getLessons(lang);
   const info = lessons.find((item) => item.id === lesson) ?? lessons[0];
-  const currentLabSource = getLabSource(lang);
-  const currentStreamSources = getStreamSources(lang);
-  const currentStreamBase = getStreamBase(lang);
+  const [scenario, setScenario] = useState<EvidenceScenario>('rack');
+  const experiment = useMemo(() => getExperiment(lang, lesson, scenario), [lang, lesson, scenario]);
 
   const [tab, setTab] = useState('source');
   const [variant, setVariant] = useState(0);
@@ -31,55 +28,63 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
   const [message, setMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const [streaming, setStreaming] = useState(false);
-  const [partial, setPartial] = useState('');
+  const [partial, setPartial] = useState<string>();
+  const [actionContext, setActionContext] = useState<RuntimeResult['context']>();
+  const [evidence, setEvidence] = useState<
+    Partial<Record<EvidenceScenario, { worker: boolean; interaction: boolean }>>
+  >({});
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   useEffect(() => () => clearInterval(timer.current), []);
 
   const source =
     lesson === 'streaming'
-      ? streaming
-        ? partial
-        : currentStreamSources[variant]
+      ? (partial ?? experiment.stream!.phases[variant])
       : lesson === 'boundary'
-        ? [
-            currentLabSource,
-            currentLabSource +
-              `\n<unknownWidget label="${lang === 'en' ? 'Unknown Widget' : '未知组件'}" />`,
-            currentLabSource + '\n<text>{window.location.href}</text>',
-          ][variant]
-        : currentLabSource +
+        ? getBoundarySource(experiment.source, variant)
+        : experiment.source +
           (revision ? `\n<caption>${t.lab.recompileCount(revision)}</caption>` : '');
-
   const compilation = useMemo(() => compile(source), [source]);
   const appData =
-    (lesson === 'data' || lesson === 'evidence') && variant === 1 ? fixtureB : fixtureA;
+    experiment.snapshots[(lesson === 'data' || lesson === 'evidence') && variant === 1 ? 1 : 0];
   const previous = useRef<Compilation | undefined>(undefined);
   const update = useMemo(() => {
-    const old = previous.current;
+    const field = classifyCompilation(previous.current, compilation);
     previous.current = compilation;
-    return JSON.stringify(old?.program) !== JSON.stringify(compilation.program)
-      ? 'program'
-      : JSON.stringify(old?.constants) !== JSON.stringify(compilation.constants)
-        ? 'constants'
-        : 'source';
+    return field;
   }, [compilation]);
 
   function stop() {
     clearInterval(timer.current);
     setStreaming(false);
-    setVariant(2);
   }
 
   function play() {
     clearInterval(timer.current);
-    setPartial(currentStreamBase);
+    const stream = experiment.stream!;
+    const full = stream.phases[stream.phases.length - 1];
+    let position = partial && partial.length < full.length ? partial.length : stream.base.length;
+    setPartial(full.slice(0, position));
     setStreaming(true);
-    let position = currentStreamBase.length;
     timer.current = setInterval(() => {
-      position += 5;
-      setPartial(currentStreamSources[2].slice(0, position));
-      if (position >= currentStreamSources[2].length) stop();
-    }, 70);
+      position = Math.min(position + 7, full.length);
+      setPartial(full.slice(0, position));
+      if (position >= full.length) {
+        stop();
+        setVariant(stream.phases.length - 1);
+      }
+    }, 100);
+  }
+
+  function resetRuntime() {
+    stop();
+    setPartial(undefined);
+    setVariant(0);
+    setRevision(0);
+    setInstance((n) => n + 1);
+    setReport(undefined);
+    setInteractions(0);
+    setMessage('');
+    setActionContext(undefined);
   }
 
   const content =
@@ -95,17 +100,20 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             null,
             2,
           )
-        : tab === 'data'
-          ? JSON.stringify(appData, null, 2)
-          : JSON.stringify(
-              {
-                state: report?.state ?? {},
-                operations: report?.operations ?? [],
-                diagnostics: report?.diagnostics ?? [],
-              },
-              null,
-              2,
-            );
+        : tab === 'fallback'
+          ? compilation.fallbackMarkdown || t.lab.noFallback
+          : tab === 'data'
+            ? JSON.stringify(appData, null, 2)
+            : JSON.stringify(
+                {
+                  state: report?.state ?? {},
+                  operations: report?.operations ?? [],
+                  diagnostics: report?.diagnostics ?? [],
+                  context: report?.context ?? {},
+                },
+                null,
+                2,
+              );
 
   return (
     <section className="s-lab" aria-labelledby="experiment-title">
@@ -122,20 +130,31 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           aria-label={t.lab.resetLab}
           title={t.lab.resetLab}
           onClick={() => {
-            clearInterval(timer.current);
-            setStreaming(false);
-            setVariant(0);
-            setRevision(0);
-            setInstance((n) => n + 1);
-            setReport(undefined);
-            setInteractions(0);
-            setMessage('');
+            resetRuntime();
+            setEvidence({});
           }}
         >
           <RotateCcw size={17} />
         </button>
       </div>
       <div className="s-experiment-controls">
+        {lesson === 'evidence' && (
+          <div className="s-segment s-lab-scenario" aria-label={t.lab.businessScenario}>
+            {(['rack', 'gpu', 'network'] as const).map((id) => (
+              <button
+                key={id}
+                aria-pressed={scenario === id}
+                onClick={() => {
+                  if (scenario === id) return;
+                  resetRuntime();
+                  setScenario(id);
+                }}
+              >
+                {t.lab.scenarios[id]}
+              </button>
+            ))}
+          </div>
+        )}
         {(lesson === 'state' || lesson === 'evidence') && (
           <button className="s-control" onClick={() => setRevision((n) => n + 1)}>
             <Code2 size={15} />
@@ -145,13 +164,19 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         {lesson === 'streaming' && (
           <>
             <div className="s-segment" aria-label={t.lab.phaseSource}>
-              {[t.lab.textGrowing, t.lab.incompleteTag, t.lab.completeComponent].map((name, i) => (
+              {[
+                t.lab.textStart,
+                t.lab.textGrowing,
+                t.lab.incompleteTag,
+                t.lab.completeComponent,
+              ].map((name, i) => (
                 <button
                   key={name}
-                  aria-pressed={variant === i && !streaming}
+                  aria-pressed={variant === i && partial === undefined}
                   onClick={() => {
                     clearInterval(timer.current);
                     setStreaming(false);
+                    setPartial(undefined);
                     setVariant(i);
                   }}
                 >
@@ -161,11 +186,15 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             </div>
             <button className="s-control" onClick={streaming ? stop : play}>
               {streaming ? <Square size={13} /> : <Play size={13} />}
-              {streaming ? t.lab.stopStream : t.lab.playStream}
+              {streaming
+                ? t.lab.stopStream
+                : partial && partial.length < experiment.source.length
+                  ? t.lab.resumeStream
+                  : t.lab.playStream}
             </button>
           </>
         )}
-        {(lesson === 'data' || lesson === 'evidence') && (
+        {(lesson === 'data' || (lesson === 'evidence' && scenario === 'network')) && (
           <div className="s-segment" aria-label={t.lab.simData}>
             {[t.lab.snapshotA, t.lab.snapshotB].map((name, i) => (
               <button
@@ -201,26 +230,75 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           {lesson === 'streaming' ? t.lab.latestUpdate(update) : t.lab.presetSourceMode}
         </span>
       </div>
+      <div className="s-lab-trace" aria-label={t.lab.observation}>
+        <span>
+          <small>{t.lab.traceSource}</small>
+          <b>
+            {source.length} {t.lab.characters}
+          </b>
+        </span>
+        <span>
+          <small>{t.lab.traceCompiler}</small>
+          <b>
+            {compilation.program.roots.length} {t.lab.roots} · {compilation.diagnostics.length}{' '}
+            {t.lab.diagnostics}
+          </b>
+        </span>
+        <span>
+          <small>{t.lab.traceWorker}</small>
+          <b>
+            {report
+              ? `${report.operations.length} ops · ${report.duration.toFixed(1)} ms`
+              : t.lab.evidencePending}
+          </b>
+        </span>
+        <span>
+          <small>{lesson === 'data' ? t.lab.programStatus : t.lab.patchField}</small>
+          <b>{lesson === 'data' ? t.lab.programUnchanged : update}</b>
+        </span>
+      </div>
       <div className="s-experiment-grid">
         <div className="s-code-panel">
-          <div className="s-code-tabs" role="tablist" aria-label="查看中间产物">
-            {[
-              ['source', t.lab.tabs.source],
-              ['compiled', t.lab.tabs.compiled],
-              ['data', t.lab.tabs.data],
-              ['runtime', t.lab.tabs.runtime],
-            ].map(([id, title]) => (
-              <button
-                id={`artifact-tab-${id}`}
-                role="tab"
-                aria-controls="artifact-content"
-                aria-selected={tab === id}
-                key={id}
-                onClick={() => setTab(id)}
-              >
-                {title}
-              </button>
-            ))}
+          <div className="s-code-tabs">
+            <div className="s-artifact-tab-list" role="tablist" aria-label={t.lab.artifacts}>
+              {[
+                ['source', t.lab.tabs.source],
+                ['compiled', t.lab.tabs.compiled],
+                ['data', t.lab.tabs.data],
+                ['runtime', t.lab.tabs.runtime],
+                ...(lesson === 'streaming' ? [['fallback', t.lab.tabs.fallback]] : []),
+              ].map(([id, title], index, tabs) => (
+                <button
+                  id={`artifact-tab-${id}`}
+                  role="tab"
+                  aria-controls="artifact-content"
+                  aria-selected={tab === id}
+                  tabIndex={tab === id ? 0 : -1}
+                  onKeyDown={(event) => {
+                    const next =
+                      event.key === 'ArrowRight'
+                        ? (index + 1) % tabs.length
+                        : event.key === 'ArrowLeft'
+                          ? (index - 1 + tabs.length) % tabs.length
+                          : event.key === 'Home'
+                            ? 0
+                            : event.key === 'End'
+                              ? tabs.length - 1
+                              : -1;
+                    if (next < 0) return;
+                    event.preventDefault();
+                    setTab(tabs[next][0]);
+                    event.currentTarget.parentElement
+                      ?.querySelector<HTMLButtonElement>(`#artifact-tab-${tabs[next][0]}`)
+                      ?.focus();
+                  }}
+                  key={id}
+                  onClick={() => setTab(id)}
+                >
+                  {title}
+                </button>
+              ))}
+            </div>
             <button
               className="s-copy"
               aria-label={t.lab.copyTooltip}
@@ -271,13 +349,22 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
           </div>
           <div className="s-live-output">
             <LiveInterface
-              key={`${instance}-${lang}`}
+              key={`${instance}-${lang}-${scenario}`}
               compilation={compilation}
               appData={appData}
               disabled={false}
               onResult={(result, interaction) => {
                 setReport(result);
                 if (interaction) setInteractions((n) => n + 1);
+                if (result.action) setActionContext(result.context);
+                if (lesson === 'evidence')
+                  setEvidence((current) => ({
+                    ...current,
+                    [scenario]: {
+                      worker: result.diagnostics.length === 0,
+                      interaction: (current[scenario]?.interaction ?? false) || interaction,
+                    },
+                  }));
               }}
               onAction={(action) => setMessage(action.text)}
             />
@@ -290,7 +377,14 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
               {t.lab.modelRequests} <b>0</b>
             </span>
             <span>
-              {t.lab.threshold} <b>{String(report?.state.threshold ?? '—')}</b>
+              {experiment.contextKey ?? experiment.stateKey}{' '}
+              <b>
+                {String(
+                  (experiment.contextKey
+                    ? report?.context?.[experiment.contextKey]
+                    : report?.state[experiment.stateKey]) ?? '—',
+                )}
+              </b>
             </span>
           </div>
         </div>
@@ -299,15 +393,23 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
         <div className="s-evidence-record" aria-live="polite">
           <h4>{t.lab.evidenceTitle}</h4>
           <ul>
-            {[
-              [compilation.diagnostics.length === 0, t.lab.evidenceCompiled],
-              [!!report, t.lab.evidenceWorker],
-              [interactions > 0, t.lab.evidenceInteraction],
-            ].map(([verified, label]) => (
-              <li key={String(label)} className={verified ? 'is-verified' : ''}>
-                {verified ? <Check size={14} /> : <Square size={12} />}
-                {label}
-                {!verified && ` · ${t.lab.evidencePending}`}
+            {(['rack', 'gpu', 'network'] as const).map((id) => (
+              <li
+                key={id}
+                className={evidence[id]?.worker && evidence[id]?.interaction ? 'is-verified' : ''}
+              >
+                {evidence[id]?.worker && evidence[id]?.interaction ? (
+                  <Check size={14} />
+                ) : (
+                  <Square size={12} />
+                )}
+                <strong>{t.lab.scenarios[id]}</strong>
+                <span>{evidence[id]?.worker ? t.lab.evidenceWorker : t.lab.evidencePending}</span>
+                <span>
+                  {evidence[id]?.interaction
+                    ? t.lab.evidenceInteraction
+                    : t.lab.evidenceNeedsInteraction}
+                </span>
               </li>
             ))}
           </ul>
@@ -324,6 +426,11 @@ export function MechanismLab({ lesson }: { lesson: LessonId }) {
             {t.lab.issueNewTurn} <ArrowUpRight size={13} />
           </span>
           <p>{message || t.lab.noActionDefault}</p>
+          {actionContext && (
+            <pre>
+              <code>{JSON.stringify(actionContext, null, 2)}</code>
+            </pre>
+          )}
           <small>{t.lab.actionNote}</small>
         </div>
       )}

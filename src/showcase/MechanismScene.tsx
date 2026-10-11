@@ -28,11 +28,30 @@ export function MechanismScene({
   const [focused, setFocused] = useState(false);
   const panel = useRef<HTMLElement>(null);
   const focusButton = useRef<HTMLButtonElement>(null);
+  const canvas = useRef<HTMLDivElement>(null);
   const index = Math.max(
     0,
     scene.nodes.findIndex((node) => node.id === selected),
   );
   const node = scene.nodes[index];
+
+  useEffect(() => {
+    const viewport = canvas.current;
+    const face = viewport?.querySelector('.s-diagram-node.is-active .s-node-face');
+    if (!viewport || !face) return;
+    const keepSelectedVisible = () => {
+      const box = viewport.getBoundingClientRect(),
+        target = face.getBoundingClientRect();
+      if (target.left < box.left + 12 || target.right > box.right - 12)
+        viewport.scrollTo({
+          left: viewport.scrollLeft + target.left - box.left - (box.width - target.width) / 2,
+        });
+    };
+    keepSelectedVisible();
+    const observer = new ResizeObserver(keepSelectedVisible);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [node.id, focused]);
 
   useEffect(() => {
     if (!autoplay || !animated) return;
@@ -180,7 +199,7 @@ export function MechanismScene({
           <p className="s-scene-summary">
             {route === 'web' ? labels.webRouteNote : labels.pathDescriptions[lesson.id]}
           </p>
-          <div className="s-scene-canvas">
+          <div className="s-scene-canvas" ref={canvas}>
             <ArchitectureDiagram
               scene={scene}
               heading={`${chapterNumber} / ${lesson.short}`}

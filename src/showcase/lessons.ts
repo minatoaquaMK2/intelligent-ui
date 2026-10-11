@@ -15,21 +15,21 @@ const lessonsZh: LessonTranslation[] = [
     description:
       '模型输出 DSL 描述界面，编译器整理校验结构，Worker 在沙箱中计算状态与数据，宿主 React 负责最终渲染。先认清分层边界，再深入各层中间产物。',
     takeaway: '模型负责声明结构；运行时负责状态计算；宿主负责安全渲染。',
-    experiment: '拆开同一份界面的三种形态',
+    experiment: '从机架描述到可点选的设备图',
     instruction:
-      '在「DSL 源码」「编译产物」与「状态 / 操作」之间切换，观察右侧界面是如何被描述、计算和增量绘制的。',
+      '切换机架并点选服务器或 GPU 节点，查看设备功耗；再对照 DSL、编译产物与 Worker 操作，追踪 rack / select / stat 如何经过组件白名单变成原生界面。',
   },
   {
     id: 'state',
     short: '本地交互',
-    name: '拖动滑块，模型还在工作吗？',
+    name: '点选 GPU，模型还在工作吗？',
     eyebrow: 'GENERATE ONCE, INTERACT LOCALLY',
     description:
       '控件把处理器 ID 和变更值提交给 Worker。Worker 在浏览器内更新状态、重算表达式，再将组件属性的变化同步回宿主。这条本地交互路径无需再次生成源码或调用模型。',
     takeaway: '局部交互完全在浏览器沙箱内闭环，状态按声明名称稳定隔离。',
-    experiment: '变更一个状态，观察运行时闭环',
+    experiment: 'GPU 卡片选择与本地筛选闭环',
     instruction:
-      '拖动右侧的温度阈值滑块，然后点击「重新编译 · 保留状态」。观察 threshold 变量与越限计数：同一运行时会完整保留你刚刚调整的状态。',
+      '点选 GPU 3，打开「只看 ≥ 80°C 的 GPU」，再点击「重新编译 · 保留状态」。检查 selected、onlyHot 与 SET 操作：筛选和卡片选择在同一 Worker 内保留，模型请求始终为 0。',
   },
   {
     id: 'streaming',
@@ -39,9 +39,9 @@ const lessonsZh: LessonTranslation[] = [
     description:
       '每次收到片段，容错编译器都会重新编译当前累计源码，再比较前后产物。结构变化时更新 program，只有文字增长时更新 constants；未完成标签产生恢复诊断，有效部分先显示。流式传输补丁不等于增量解析。',
     takeaway: '流式容错机制保留可用片段，用户无需等待漫长的模型生成结束。',
-    experiment: '让源码停在未完成的标签上',
+    experiment: '逐步生成机架的网络端口面板',
     instruction:
-      '对比「文字增长」「未完成标签」与「完整组件」三种切片，也可以点击「播放流式编译」，观察诊断信息与产物的实时演进。',
+      '先把机架切到 Rack A02，再比较说明开头、文字增长、未完成标签和完整端口面板。检查 constants / program 更新、恢复诊断与 rack 状态；播放时可暂停并从当前源码继续。',
   },
   {
     id: 'data',
@@ -51,9 +51,9 @@ const lessonsZh: LessonTranslation[] = [
     description:
       'DSL 中通过 data.* 表达式引用数据。appData 独立传入运行时，更新快照时无需改写源码或重新调用模型。数值直接来自数据源，减少让模型转抄数据的错误。',
     takeaway: '同一份 UI 程序可以复用于多份动态数据，结构抽象与数据实体完全解耦。',
-    experiment: '切换数据源，程序架构保持不变',
+    experiment: '网络快照变化，端口程序保持不变',
     instruction:
-      '在「快照 A」和「快照 B」之间切换。源码无需变动，Worker 即可基于新数据重新派生指标，同时你设置的阈值依然得以保留。',
+      '点选端口 8，再切换正常与故障快照。端口 7 变为中断、端口 8 出现 128 个 CRC 错误，聚合速率随之更新；DSL 和编译程序不变，当前端口选择保留。',
   },
   {
     id: 'boundary',
@@ -63,9 +63,9 @@ const lessonsZh: LessonTranslation[] = [
     description:
       '本项目采用严格的组件白名单与安全表达式沙箱。源码编译为 JSON IR，由 Worker 解释受控 AST。任何未注册组件、非法属性或全局对象（window / document）访问均被坚决拦截。',
     takeaway: 'Web Worker 隔离了执行线程，而真正的安全边界来自于受限的语法和白名单。',
-    experiment: '注入一段越界或非法表达式',
+    experiment: '机架原生控件的执行边界',
     instruction:
-      '依次查看「合法表达式」「未知组件」和「访问 window」。观察编译诊断的拦截提示，以及未受影响的有效组件如何安全渲染。',
+      '使用合法的机架选择控件，再尝试未注册的 remoteShell 与 window 访问。对照编译诊断，确认合法机架图仍可点选；这里运行原生组件路线，网页路线只是图解中的机制对照。',
   },
   {
     id: 'action',
@@ -73,11 +73,11 @@ const lessonsZh: LessonTranslation[] = [
     name: '当前选择，如何进入下一轮？',
     eyebrow: 'MAKE CONTEXT EXPLICIT',
     description:
-      '滑块变化不会自动开始对话。点击按钮后，Worker 根据当前状态生成 issueNewTurn(text)，交给宿主处理。完整 POC 再由宿主提交新消息和经过校验的上下文，生成一条新回复；下方实验只捕获动作，不调用模型。',
+      '点选设备和端口不会自动开始对话。点击按钮后，Worker 根据当前状态生成 issueNewTurn(text)，交给宿主处理。完整 POC 再由宿主提交新消息和经过校验的上下文，生成一条新回复；下方实验只捕获动作，不调用模型。',
     takeaway: '对话上下文由宿主受控显式携带，模型并不直接透传 Worker 的原始内部状态。',
-    experiment: '将交互结果封装为下一轮消息',
+    experiment: '把机架、交换机和端口带入下一轮',
     instruction:
-      '调整滑块阈值，点击界面中的「带着当前状态继续」。查看下方捕获的 Action 文本如何带入当前阈值和越限台数；本实验不会发送新请求。',
+      '选择 Rack A02、另一台交换机和任意端口，然后点击「带着当前链路继续分析」。对照捕获的消息和 context 中的 rack / deviceId / portId；只捕获显式 Action，不发送新请求。',
   },
   {
     id: 'evidence',
@@ -87,9 +87,9 @@ const lessonsZh: LessonTranslation[] = [
     description:
       '区分可检查的实现、真实运行的机制与模拟输入。实验可以验证编译、Worker、本地状态和数据更新；预置模板与遥测快照不能证明模型生成质量、真实机房数据或生产隔离强度。',
     takeaway: '观察实际产物和状态变化，再把结论限定在实验确实验证的范围内。',
-    experiment: '用 GPU 监控界面验证实现与边界',
+    experiment: '分别验证机架、GPU 与网络运行记录',
     instruction:
-      '调整温度阈值，切换 A / B 数据快照，再重新编译。对照下方验证记录和「状态 / 操作」，检查真实 Worker 的结果；输入始终是固定模拟数据。',
+      '依次打开机架设备、GPU 卡片和网络端口案例，并在每个案例中点选业务控件。只有收到真实 Worker 结果并完成事件后才标记验证通过；切换案例会新建运行时，记录跨案例保留。',
   },
 ];
 
@@ -102,22 +102,22 @@ const lessonsEn: LessonTranslation[] = [
     description:
       'The model emits DSL describing the UI, the compiler structures IR, the Worker sandbox evaluates state and data, and React renders the components. Understand the role of each layer before diving into artifacts.',
     takeaway: 'The model declares structure; the runtime computes state; the host renders safely.',
-    experiment: 'Deconstruct the Three Forms of a Single Interface',
+    experiment: 'Trace a Rack Description into Selectable Devices',
     instruction:
-      'Toggle between "DSL Source", "Compiled IR", and "State / Ops" to observe how the interface on the right is described, evaluated, and rendered.',
+      'Choose a rack and select a server or GPU node to inspect its power. Compare DSL, compiled IR and Worker operations to see registered rack / select / stat components become a native interface.',
   },
   {
     id: 'state',
     short: 'Local Interaction',
-    name: 'When moving a slider, is the model still running?',
+    name: 'When selecting a GPU, is the model still running?',
     eyebrow: 'GENERATE ONCE, INTERACT LOCALLY',
     description:
       'The UI control sends a handler ID and updated value to the Worker. It updates state, re-evaluates expressions, and returns changed component props locally in the browser. This path neither regenerates source nor calls the model.',
     takeaway:
       'Local interactions close the loop inside the browser sandbox; state persists under stable identifiers.',
-    experiment: 'Change a State Variable & Observe the Local Loop',
+    experiment: 'Select and Filter GPU Cards Locally',
     instruction:
-      'Drag the temperature threshold slider on the right, then click "Recompile · Keep State". Observe threshold and alert count: the active runtime retains your state.',
+      'Select GPU 3, enable the ≥80°C-only filter, then click "Recompile · Keep State". Inspect selected, onlyHot and SET operations: the same Worker keeps your choices with zero model calls.',
   },
   {
     id: 'streaming',
@@ -128,9 +128,9 @@ const lessonsEn: LessonTranslation[] = [
       'Each incoming chunk triggers a fresh compilation of the accumulated source. Comparing outputs determines whether program, constants, or only recovery diagnostics changed. Valid content appears before the source is complete. Streaming patches do not imply incremental parsing.',
     takeaway:
       'Streaming fault-tolerance preserves usable subtrees so users never wait for stream completion.',
-    experiment: 'Pause Source on an Incomplete Tag',
+    experiment: 'Stream a Rack’s Network Port Panel',
     instruction:
-      'Compare "Growing Text", "Incomplete Tag", and "Full Component", or hit "Play Streaming" to watch diagnostics and artifacts evolve live.',
+      'Choose Rack A02 first, then compare opening text, growing text, an incomplete tag and the finished port panel. Inspect constants / program updates, recovery diagnostics and retained rack state. Playback can pause and resume from the current source.',
   },
   {
     id: 'data',
@@ -141,9 +141,9 @@ const lessonsEn: LessonTranslation[] = [
       'The DSL references data.* fields supplied independently as appData. Updating the snapshot does not change the source or call the model. Values come from the data feed, reducing errors from having the model copy them.',
     takeaway:
       'The same compiled UI program binds to distinct datasets—separating UI topology from data feeds.',
-    experiment: 'Switch Data Feeds Without Changing the Program',
+    experiment: 'Update Network Telemetry with the Same Program',
     instruction:
-      'Toggle between Snapshot A and B. With unchanged source, the Worker re-evaluates derivations against new data while keeping your adjusted threshold intact.',
+      'Select port 8, then switch between healthy and degraded snapshots. Port 7 goes down and port 8 reports 128 CRC errors; aggregate receive rate changes. DSL and program stay identical, and your port selection survives.',
   },
   {
     id: 'boundary',
@@ -154,9 +154,9 @@ const lessonsEn: LessonTranslation[] = [
       'This architecture enforces a strict component whitelist and a sandboxed expression engine. Code compiles into a JSON IR evaluated by an AST interpreter in a Worker. Unauthorized components, prototype access, or globals like window/document are strictly rejected.',
     takeaway:
       'Workers isolate the execution thread, but the true security perimeter is defined by restricted grammar and schemas.',
-    experiment: 'Inject an Unauthorized Expression or Tag',
+    experiment: 'Validate Native Rack Controls at the Boundary',
     instruction:
-      'Compare "Valid Expression", "Unknown Component", and "Access window". Observe compiler diagnostics blocking risky nodes while safe neighbors continue rendering.',
+      'Use registered rack controls, then try an unregistered remoteShell or access to window. Compiler diagnostics reject them while the rack remains interactive. This lab runs the native route; the diagram’s web route is conceptual.',
   },
   {
     id: 'action',
@@ -164,12 +164,12 @@ const lessonsEn: LessonTranslation[] = [
     name: 'How does current interaction feed into the next turn?',
     eyebrow: 'MAKE CONTEXT EXPLICIT',
     description:
-      'Moving a slider does not start a conversation. A button event asks the Worker to build issueNewTurn(text) from current state and return it to the host. The full POC submits a new message with validated context and creates a new response; this lab only captures the action, without calling a model.',
+      'Selecting devices and ports does not start a conversation. A button event asks the Worker to build issueNewTurn(text) from current state and return it to the host. The full POC submits a new message with validated context and creates a new response; this lab only captures the action, without calling a model.',
     takeaway:
       'Context is explicitly forwarded by the host; the model never has unvetted access to Worker state.',
-    experiment: 'Package Current State as a Next-Turn Action',
+    experiment: 'Carry Rack, Switch and Port into the Next Turn',
     instruction:
-      'Adjust the threshold slider, then click "Continue with Current State". Inspect how the captured Action text includes the current threshold and alert count. This lab does not send a new request.',
+      'Choose Rack A02, another switch and a port, then click "Analyze this link in the next turn". Compare the captured message and rack / deviceId / portId context. This captures an explicit Action without sending a request.',
   },
   {
     id: 'evidence',
@@ -180,9 +180,9 @@ const lessonsEn: LessonTranslation[] = [
       'Separate inspectable implementation, real execution, and simulated inputs. Labs verify compilation, Workers, local state and data updates. Presets and telemetry snapshots do not establish model quality, real hardware data or production isolation.',
     takeaway:
       'Inspect actual artifacts and state changes, then limit conclusions to what the experiment verifies.',
-    experiment: 'Verify the GPU Monitoring Engine and Its Limits',
+    experiment: 'Verify Rack, GPU and Network Execution Separately',
     instruction:
-      'Adjust the threshold, switch snapshots A / B, then recompile. Compare the verification record and State / Ops with actual Worker output. Inputs remain fixed simulated data.',
+      'Open each rack, GPU and network case and select a business control. A case is verified only after actual Worker results and an event arrive. Switching cases creates a fresh runtime while the cross-case verification record stays visible.',
   },
 ];
 
