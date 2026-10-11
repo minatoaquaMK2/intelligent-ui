@@ -19,6 +19,19 @@ npm run pages:build    # 构建静态教学页与嵌入式试用
 
 推送到 `main` 后，GitHub Actions 自动检查、构建并部署到 GitHub Pages。
 
+## 复用为 Codex skill
+
+[github-pages-explainer](skills/github-pages-explainer/SKILL.md) 将本站的分章叙事、交互机制图和业务实验方法整理为可复用 skill，包含独立的 React/TypeScript 图解组件、页面骨架、搜索示例，以及浏览器验收和 GitHub Pages 发布流程。章节与实验根据目标项目的真实实现设计。
+
+将完整的 `skills/github-pages-explainer/` 目录复制到本机 `~/.codex/skills/github-pages-explainer/`，在其他项目中调用：
+
+```text
+使用 $github-pages-explainer，为这个项目制作技术讲解网站，
+图解配合真实业务实验，完成后 push 并部署 GitHub Pages。
+```
+
+该 skill 已通过结构校验，并用搜索与任务队列两个不同项目验证构建、实验和响应式交互。
+
 ## 快速启动
 
 需要 Node.js **22.12+**（开发与验证使用 Node 24）和 npm。

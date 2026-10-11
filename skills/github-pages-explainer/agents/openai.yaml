@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Pages 机制实验室"
+  short_description: "把项目机制转成分章叙事、交互图解和业务实验，并部署 GitHub Pages"
+  default_prompt: "使用 $github-pages-explainer，为当前项目制作可在 GitHub Pages 发布的技术展示页，用不同机制图和对应业务实验讲清背后的逻辑。"
